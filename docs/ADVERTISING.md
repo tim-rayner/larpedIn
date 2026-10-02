@@ -28,7 +28,37 @@ export const hasAdConsent = () => yourConsentPlatform.permitsAdvertising();
 
 This is an interface example, not a working Google or Meta adapter. A real SDK may require a connected element rather than a detached mount. In that case implement a reviewed adapter with a reserved connected mount and explicit cleanup, and extend the provider-boundary tests to cover its lifecycle before enabling it.
 
+### Where the adapter connects
+
+| File | Responsibility |
+|---|---|
+| `src/ads.js` | Render a labelled slot and the house creative in the initial HTML. |
+| `public/ad-config.js` | Export the selected provider and a synchronous consent check. This is the only file that needs an account-specific adapter. |
+| `public/ad-controller.js` | Enforce consent and visibility, prevent duplicate requests, and return `filled` or `fallback`. |
+| `public/app.js` | Watch slots as they approach the viewport and replace the house creative only when the adapter has mounted an ad. |
+| `src/server.js` | Allow the exact SDK and creative origins in the Content Security Policy after selecting a provider. |
+
+For a local wiring check, temporarily replace the exports in `public/ad-config.js` with this **fake provider**. Restart the server after editing the file because static assets are cached in memory:
+
+```js
+export const hasAdConsent = () => true; // Local wiring check only. Never use for production consent.
+
+export const provider = {
+  async render({ id, mount, signal }) {
+    if (signal.aborted) return { filled: false };
+    const creative = document.createElement('div');
+    creative.textContent = `Test creative for ${id}`;
+    mount.append(creative);
+    return { filled: true };
+  }
+};
+```
+
+Open the feed, scroll a post close to the viewport, and confirm that its labelled slot shows the test creative. Repeat with `return { filled: false }` or a thrown error and confirm the house ad remains. Restore the default exports before committing. This checks the app's adapter wiring; it does not test a real publisher SDK or authorise third-party requests.
+
 When the CMP changes permission, dispatch `new Event('larpedin:ad-consent-changed')`. This re-observes placements so those withheld before consent can become eligible. On withdrawal, the production adapter must additionally tear down active vendor resources and follow the vendor's consent-mode requirements; re-observation alone does not undo SDK side effects. CMP state must be available synchronously to `hasAdConsent` and failure must resolve to false.
+
+Run `npm test` for the provider-boundary tests, then `npm run test:browser` with the server running to check the complete feed. Re-run a mobile performance audit with the real provider enabled; the house-ad performance numbers in `docs/VERIFICATION.md` do not cover an ad network.
 
 ## Connecting revenue
 
