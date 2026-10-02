@@ -25,8 +25,7 @@ export function createHandler(services: Services) {
       if (pathname === '/health') return json({ok: true});
 
       if (pathname === '/refresh') {
-        // Vercel Cron calls with GET, GitHub Actions and manual triggers with POST.
-        if (request.method !== 'POST' && request.method !== 'GET') return json({error: 'Method not allowed'}, 405);
+        if (request.method !== 'POST') return json({error: 'Method not allowed'}, 405);
         if (!services.refreshSecret) return json({error: 'Refresh is not configured'}, 503);
         if (!authorised(request, services.refreshSecret)) return json({error: 'Unauthorized'}, 401);
         if (!services.newsEnabled) return json({error: 'News is disabled'}, 503);

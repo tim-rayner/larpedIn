@@ -10,4 +10,4 @@ Hosting has a £0 budget, and Vercel's free tier can neither run a resident proc
 
 ## Amendment (2026-10-02)
 
-The GitHub schedule on its own proved unreliable: after the workflow was added, not one scheduled run fired in over two hours, and the Edition went stale. The schedule now runs at minute 17 rather than on the hour (GitHub drops runs most often at `:00`), and a daily Vercel Cron (`GET /refresh`, allowed on Hobby) acts as a backstop. For Vercel to authenticate, set `CRON_SECRET` to the same value as `REFRESH_SECRET`. `/refresh` therefore accepts `GET` as well as `POST`.
+The GitHub schedule on its own proved unreliable: after the workflow was added, not one scheduled run fired in over two hours, and the Edition went stale. The schedule now runs at minute 17 rather than on the hour, where GitHub drops runs most often. A Vercel Cron backstop was considered and rejected: Hobby only allows daily runs, and it would need a second secret. If runs are still dropped, add a free external pinger that sends `POST /refresh` hourly.

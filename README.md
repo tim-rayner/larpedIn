@@ -82,7 +82,7 @@ Two Vercel projects from this repo, both on the free tier with `bunVersion` set 
 | web | `apps/web` | `NEWS_SERVICE_URL`, optional `SHOW_NEWS_SOURCE` |
 | news | `apps/news` | `REFRESH_SECRET`, `OPENAI_API_KEY`, `UPSTASH_REDIS_REST_URL`/`TOKEN`, `R2_*` |
 
-The hourly Refresh is a GitHub Actions schedule (`.github/workflows/refresh.yml`). Add repository secrets `NEWS_SERVICE_URL` and `REFRESH_SECRET`, also set `CRON_SECRET` on the news project to the same value as `REFRESH_SECRET` (the daily Vercel Cron backstop sends it), then run the workflow once by hand (`workflow_dispatch`) after the first deploy: the service never refreshes itself on an empty read, because that would let any visitor spend model budget. See [docs/adr/0001-news-service-as-functions-with-external-cron.md](docs/adr/0001-news-service-as-functions-with-external-cron.md) for why.
+The hourly Refresh is a GitHub Actions schedule (`.github/workflows/refresh.yml`). Add repository secrets `NEWS_SERVICE_URL` and `REFRESH_SECRET`, then run the workflow once by hand (`workflow_dispatch`) after the first deploy: the service never refreshes itself on an empty read, because that would let any visitor spend model budget. See [docs/adr/0001-news-service-as-functions-with-external-cron.md](docs/adr/0001-news-service-as-functions-with-external-cron.md) for why.
 
 Free-tier notes: Vercel Hobby is restricted to non-commercial use, so check Vercel's current terms before running ads. R2 and Upstash have free tiers; Expiry deletes an Edition's photos once a newer Edition is live, which keeps storage small.
 
