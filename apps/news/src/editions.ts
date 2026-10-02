@@ -1,4 +1,4 @@
-import { EDITION_ID_PATTERN, type Edition } from '@larpedin/shared';
+import { EDITION_ID_PATTERN, type Edition } from './shared';
 import type { ImageStore, KeyValueStore } from './stores';
 
 const PREFIX = 'larpedin:v1';

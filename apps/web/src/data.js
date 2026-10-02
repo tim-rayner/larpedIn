@@ -1,4 +1,4 @@
-import { PUBLIC_CHARACTERS as cast } from '@larpedin/shared';
+import { PUBLIC_CHARACTERS as cast } from './shared';
 
 const post = (id, characterId, details) => ({id, ...cast[characterId], ...details});
 

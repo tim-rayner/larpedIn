@@ -3,7 +3,7 @@ process.env.SHOW_NEWS_SOURCE='true';
 import { chromium, expect } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { renderPost } from '../src/render.js';
-import { PUBLIC_CHARACTERS } from '@larpedin/shared';
+import { PUBLIC_CHARACTERS } from '../src/shared.js';
 const browserFeedPost=(id,index)=>({id,...PUBLIC_CHARACTERS[index%2?'mark-zuckerbot':'scam-altman'],time:'1h',tag:'Tech gospel',social:'Test desk',body:[`Test story ${index+1}`,'A scalable amount of satire.'],tags:'#TechNews',sourceUrl:`https://techcrunch.com/test-${index+1}/`,sourceName:'TechCrunch',likes:10+index,comments:2,reposts:1});
 const browserFeedPages=[0,2].map(offset=>[0,1].map(index=>renderPost(browserFeedPost(`rss-browser-${offset+index}`,offset+index),offset+index)).join(''));
 const browser=await chromium.launch({channel:'chrome',headless:true});

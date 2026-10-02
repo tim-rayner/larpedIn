@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { Edition, Headline, Post } from '@larpedin/shared';
+import type { Edition, Headline, Post } from './shared';
 import type { Services } from './config';
 import { lockKey, publishEdition, readCurrentEdition } from './editions';
 import { ensureStoryImage } from './images';

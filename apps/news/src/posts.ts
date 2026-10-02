@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { Post } from '@larpedin/shared';
+import type { Post } from './shared';
 import { characterForNewsStory } from './routing';
 import type { GeneratedSatire } from './satire';
 import type { Story } from './types';

@@ -1,4 +1,4 @@
-import { IMAGE_ID_PATTERN } from '@larpedin/shared';
+import { IMAGE_ID_PATTERN } from './shared';
 import { extractTechCrunchImage, MAX_ARTICLE_BYTES } from './rss';
 import type { ImageStore } from './stores';
 import { imageIdFor } from './posts';

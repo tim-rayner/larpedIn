@@ -1,5 +1,5 @@
 import { timingSafeEqual } from 'node:crypto';
-import { EDITION_ID_PATTERN, IMAGE_ID_PATTERN, type Edition } from '@larpedin/shared';
+import { EDITION_ID_PATTERN, IMAGE_ID_PATTERN, type Edition } from './shared';
 import type { Services } from './config';
 import { readCurrentEdition, readEdition } from './editions';
 import { refresh } from './refresh';

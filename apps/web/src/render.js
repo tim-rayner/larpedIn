@@ -2,7 +2,7 @@ import { escapeHtml as e } from './html.js';
 import { icon as i } from './icons.js';
 import { renderAdSlot } from './ads.js';
 import { posts, people, news } from './data.js';
-import { currentUser } from '@larpedin/shared';
+import { currentUser } from './shared';
 import { renderFooter } from './footer.js';
 import { showNewsSource } from './flags.js';
 export const avatar = (name, size = '', alt = '') => `<span class="avatar avatar-${e(name)} ${size}" ${alt ? `role="img" aria-label="${e(alt)}"` : 'aria-hidden="true"'}></span>`;

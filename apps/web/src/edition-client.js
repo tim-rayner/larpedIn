@@ -1,4 +1,4 @@
-import { EDITION_ID_PATTERN, IMAGE_ID_PATTERN } from '@larpedin/shared';
+import { EDITION_ID_PATTERN, IMAGE_ID_PATTERN } from './shared';
 
 /** The news service could not supply an Edition (down, empty, or not configured). */
 export class EditionUnavailable extends Error {}

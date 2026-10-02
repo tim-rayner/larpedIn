@@ -3,7 +3,7 @@ import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { createHash, randomUUID } from 'node:crypto';
-import { IMAGE_ID_PATTERN, currentUser } from '@larpedin/shared';
+import { IMAGE_ID_PATTERN, currentUser } from './shared';
 import { renderPage, renderPost } from './render.js';
 import { legalPaths, renderLegalPage } from './legal.js';
 import { news, people } from './data.js';

@@ -1,4 +1,4 @@
-import { CHARACTERS, PUBLIC_CHARACTERS, type PublicCharacter } from '@larpedin/shared';
+import { CHARACTERS, PUBLIC_CHARACTERS, type PublicCharacter } from './shared';
 import type { Story } from './types';
 
 export function characterForNewsStory(story: Pick<Story, 'title' | 'url'> & Partial<Pick<Story, 'description' | 'categories'>>): PublicCharacter {
