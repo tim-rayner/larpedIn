@@ -1,5 +1,5 @@
 import { CHARACTERS, PUBLIC_CHARACTERS, type PublicCharacter } from '@larpedin/shared';
-import type { Story } from './types.ts';
+import type { Story } from './types';
 
 export function characterForNewsStory(story: Pick<Story, 'title' | 'url'> & Partial<Pick<Story, 'description' | 'categories'>>): PublicCharacter {
   const searchable = [story.title, story.description, ...(story.categories || [])].filter(Boolean).join(' ').toLowerCase();

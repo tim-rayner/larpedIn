@@ -1,6 +1,6 @@
-import { TECHCRUNCH_FEED_URL } from './rss.ts';
-import { DEFAULT_MODEL } from './satire.ts';
-import { createMemoryImageStore, createMemoryKeyValueStore, createR2ImageStore, createUpstashKeyValueStore, type ImageStore, type KeyValueStore } from './stores.ts';
+import { TECHCRUNCH_FEED_URL } from './rss';
+import { DEFAULT_MODEL } from './satire';
+import { createMemoryImageStore, createMemoryKeyValueStore, createR2ImageStore, createUpstashKeyValueStore, type ImageStore, type KeyValueStore } from './stores';
 
 export interface Services {
   kv: KeyValueStore;

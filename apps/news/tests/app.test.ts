@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
-import { createHandler } from '../src/app.ts';
-import { harness } from './helpers.ts';
+import { createHandler } from '../src/app';
+import { harness } from './helpers';
 
 const call = (handle: ReturnType<typeof createHandler>, path: string, init?: RequestInit) => handle(new Request(`http://news.test${path}`, init));
 const authed = {method: 'POST', headers: {Authorization: 'Bearer test-secret'}};

@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { PUBLIC_CHARACTERS, characterForCompany, currentUser } from '../src/index.ts';
+import { PUBLIC_CHARACTERS, characterForCompany, currentUser } from '../src/index';
 
 test('Scam Altman is the current fictional user', () => {
   expect(currentUser.name).toBe('Scam Altman');

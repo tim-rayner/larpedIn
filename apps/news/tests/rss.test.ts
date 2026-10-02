@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { extractTechCrunchImage, parseTechCrunchRss } from '../src/rss.ts';
+import { extractTechCrunchImage, parseTechCrunchRss } from '../src/rss';
 
 const feed = `<?xml version="1.0"?><rss><channel>
 <item><title><![CDATA[OpenAI ships &amp; shops]]></title><link>https://techcrunch.com/2026/10/01/example/</link><dc:creator><![CDATA[A. Reporter]]></dc:creator><pubDate>Thu, 01 Oct 2026 12:00:00 +0000</pubDate><category>AI</category><category>OpenAI</category><description><![CDATA[<p>The company launched a useful feature.</p>]]></description></item>

@@ -1,8 +1,8 @@
 import { timingSafeEqual } from 'node:crypto';
 import { EDITION_ID_PATTERN, IMAGE_ID_PATTERN, type Edition } from '@larpedin/shared';
-import type { Services } from './config.ts';
-import { readCurrentEdition, readEdition } from './editions.ts';
-import { refresh } from './refresh.ts';
+import type { Services } from './config';
+import { readCurrentEdition, readEdition } from './editions';
+import { refresh } from './refresh';
 
 /** An Edition older than this is flagged stale: an hourly Refresh has evidently been missed. */
 const STALE_AFTER_MS = 150 * 60_000;

@@ -1,6 +1,6 @@
-import { characterForNewsStory } from './routing.ts';
-import type { SatireTemplate } from './satire-templates.ts';
-import type { Story } from './types.ts';
+import { characterForNewsStory } from './routing';
+import type { SatireTemplate } from './satire-templates';
+import type { Story } from './types';
 
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 export const DEFAULT_MODEL = 'gpt-6-luna';

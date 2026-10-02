@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import type { Post } from '@larpedin/shared';
-import { characterForNewsStory } from './routing.ts';
-import type { GeneratedSatire } from './satire.ts';
-import type { Story } from './types.ts';
+import { characterForNewsStory } from './routing';
+import type { GeneratedSatire } from './satire';
+import type { Story } from './types';
 
 const stableNumber = (value: string, min: number, spread: number) => min + Number.parseInt(createHash('sha256').update(value).digest('hex').slice(0, 8), 16) % spread;
 

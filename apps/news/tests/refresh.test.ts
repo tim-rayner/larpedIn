@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
-import { imageIdsOf, readCurrentEdition, readEdition } from '../src/editions.ts';
-import { refresh } from '../src/refresh.ts';
-import { harness, rss } from './helpers.ts';
+import { imageIdsOf, readCurrentEdition, readEdition } from '../src/editions';
+import { refresh } from '../src/refresh';
+import { harness, rss } from './helpers';
 
 test('a Refresh builds one Edition of persona Posts with photos and headlines', async () => {
   const {services, images} = harness({feed: () => rss(7)});

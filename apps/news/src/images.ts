@@ -1,8 +1,8 @@
 import { IMAGE_ID_PATTERN } from '@larpedin/shared';
-import { extractTechCrunchImage, MAX_ARTICLE_BYTES } from './rss.ts';
-import type { ImageStore } from './stores.ts';
-import { imageIdFor } from './posts.ts';
-import type { Story } from './types.ts';
+import { extractTechCrunchImage, MAX_ARTICLE_BYTES } from './rss';
+import type { ImageStore } from './stores';
+import { imageIdFor } from './posts';
+import type { Story } from './types';
 
 const MAX_IMAGE_BYTES = 3_000_000;
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];

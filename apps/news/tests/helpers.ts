@@ -1,5 +1,5 @@
-import type { Services } from '../src/config.ts';
-import { createMemoryImageStore, createMemoryKeyValueStore } from '../src/stores.ts';
+import type { Services } from '../src/config';
+import { createMemoryImageStore, createMemoryKeyValueStore } from '../src/stores';
 
 export const rss = (count: number, prefix = 'Story') => `<?xml version="1.0"?><rss><channel>${Array.from({length: count}, (_, index) =>
   `<item><title>${prefix} ${index + 1}</title><link>https://techcrunch.com/2026/10/01/${prefix.toLowerCase()}-${index + 1}/</link><dc:creator>Reporter</dc:creator><pubDate>Thu, 01 Oct 2026 12:00:00 +0000</pubDate><category>AI</category><description>Summary ${index + 1}.</description></item>`).join('')}</channel></rss>`;

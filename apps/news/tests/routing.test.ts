@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { characterForNewsStory } from '../src/routing.ts';
+import { characterForNewsStory } from '../src/routing';
 
 test('news metadata maps to the appropriate fictional CEO', () => {
   expect(characterForNewsStory({title: 'A story', categories: ['OpenAI'], url: 'one'}).characterId).toBe('scam-altman');

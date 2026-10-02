@@ -1,2 +1,2 @@
-export * from './characters.ts';
-export * from './types.ts';
+export * from './characters';
+export * from './types';

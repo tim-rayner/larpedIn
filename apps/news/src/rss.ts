@@ -1,4 +1,4 @@
-import type { Story } from './types.ts';
+import type { Story } from './types';
 
 export const TECHCRUNCH_FEED_URL = 'https://techcrunch.com/feed/';
 export const MAX_FEED_BYTES = 2_000_000;

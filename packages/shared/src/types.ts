@@ -1,4 +1,4 @@
-import type { PublicCharacter } from './characters.ts';
+import type { PublicCharacter } from './characters';
 
 /** One satirical, persona-voiced rendering of a Story. Contains no markup. */
 export interface Post extends PublicCharacter {

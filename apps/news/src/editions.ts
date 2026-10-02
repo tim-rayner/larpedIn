@@ -1,5 +1,5 @@
 import { EDITION_ID_PATTERN, type Edition } from '@larpedin/shared';
-import type { ImageStore, KeyValueStore } from './stores.ts';
+import type { ImageStore, KeyValueStore } from './stores';
 
 const PREFIX = 'larpedin:v1';
 const currentKey = `${PREFIX}:current`;

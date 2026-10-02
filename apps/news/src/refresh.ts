@@ -1,13 +1,13 @@
 import { createHash } from 'node:crypto';
 import type { Edition, Headline, Post } from '@larpedin/shared';
-import type { Services } from './config.ts';
-import { lockKey, publishEdition, readCurrentEdition } from './editions.ts';
-import { ensureStoryImage } from './images.ts';
-import { toPost } from './posts.ts';
-import { parseTechCrunchRss } from './rss.ts';
-import { generateSatire } from './satire.ts';
-import { chooseSatireTemplates } from './satire-templates.ts';
-import type { Story } from './types.ts';
+import type { Services } from './config';
+import { lockKey, publishEdition, readCurrentEdition } from './editions';
+import { ensureStoryImage } from './images';
+import { toPost } from './posts';
+import { parseTechCrunchRss } from './rss';
+import { generateSatire } from './satire';
+import { chooseSatireTemplates } from './satire-templates';
+import type { Story } from './types';
 
 const LOCK_SECONDS = 300;
 const IMAGE_CONCURRENCY = 6;
