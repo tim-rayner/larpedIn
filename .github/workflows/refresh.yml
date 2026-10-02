@@ -2,7 +2,7 @@ name: Refresh news edition
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '17 * * * *'
   # Also the way to publish the first Edition after a fresh deploy.
   workflow_dispatch:
 

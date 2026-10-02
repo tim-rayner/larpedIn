@@ -5,12 +5,21 @@ import { harness } from './helpers';
 const call = (handle: ReturnType<typeof createHandler>, path: string, init?: RequestInit) => handle(new Request(`http://news.test${path}`, init));
 const authed = {method: 'POST', headers: {Authorization: 'Bearer test-secret'}};
 
-test('/refresh requires the shared secret and is POST only', async () => {
+test('/refresh requires the shared secret and only accepts GET or POST', async () => {
   const handle = createHandler(harness().services);
   expect((await call(handle, '/refresh', {method: 'POST'})).status).toBe(401);
   expect((await call(handle, '/refresh', {method: 'POST', headers: {Authorization: 'Bearer wrong'}})).status).toBe(401);
-  expect((await call(handle, '/refresh')).status).toBe(405);
+  expect((await call(handle, '/refresh')).status).toBe(401);
+  expect((await call(handle, '/refresh', {method: 'DELETE', headers: {Authorization: 'Bearer test-secret'}})).status).toBe(405);
   expect((await call(createHandler(harness({secret: null}).services), '/refresh', authed)).status).toBe(503);
+});
+
+test('an authorised GET /refresh publishes an Edition, as Vercel Cron sends it', async () => {
+  const handle = createHandler(harness().services);
+  const response = await call(handle, '/refresh', {headers: {Authorization: 'Bearer test-secret'}});
+  expect(response.status).toBe(200);
+  expect(((await response.json()) as {status: string}).status).toBe('published');
+  expect((await call(handle, '/edition')).status).toBe(200);
 });
 
 test('/edition is 503 before the first Refresh and serves the current Edition after', async () => {
