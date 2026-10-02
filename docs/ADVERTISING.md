@@ -2,11 +2,11 @@
 
 ## Current behaviour
 
-Each post is rendered with a unique `ad-<post ID>` placement, an explicit **Advertisement** label, reserved layout space and a fictional house campaign. New user posts receive the same component from the server. House campaigns are selected by post index. They are not paid ads and the buttons do not take payment.
+Each post is rendered with a unique `ad-<post ID>` placement, an explicit **Advertisement** label, reserved layout space and a "YOUR ADVERT HERE" placeholder. New user posts receive the same component from the server. The placeholder is not a paid ad: its button opens a dialog with a contact email (timr.codes@gmail.com) and no payment is taken.
 
 The default `public/ad-config.js` exports `provider = null` and `hasAdConsent = () => false`. No external SDK, cookies, tracking pixel or ad auction is loaded. Do not change that to `true` as a substitute for a consent integration.
 
-`IntersectionObserver` requests eligible slots close to the viewport. Each placement can invoke its provider at most once per page lifetime, including failures. There is no ad refresh loop. SDK failures, explicit no-fill, or the 2.5-second timeout preserve the house creative. A detached mount prevents a late callback from replacing the fallback after timeout. Empty mounts do not replace the fallback.
+`IntersectionObserver` requests eligible slots close to the viewport. Each placement can invoke its provider at most once per page lifetime, including failures. There is no ad refresh loop. SDK failures, explicit no-fill, or the 2.5-second timeout preserve the placeholder creative. A detached mount prevents a late callback from replacing the fallback after timeout. Empty mounts do not replace the fallback.
 
 ## Public provider contract
 
@@ -32,10 +32,10 @@ This is an interface example, not a working Google or Meta adapter. A real SDK m
 
 | File | Responsibility |
 |---|---|
-| `apps/web/src/ads.js` | Render a labelled slot and the house creative in the initial HTML. |
+| `apps/web/src/ads.js` | Render a labelled slot and the placeholder creative in the initial HTML. |
 | `public/ad-config.js` | Export the selected provider and a synchronous consent check. This is the only file that needs an account-specific adapter. |
 | `public/ad-controller.js` | Enforce consent and visibility, prevent duplicate requests, and return `filled` or `fallback`. |
-| `public/app.js` | Watch slots as they approach the viewport and replace the house creative only when the adapter has mounted an ad. |
+| `public/app.js` | Watch slots as they approach the viewport and replace the placeholder creative only when the adapter has mounted an ad. |
 | `apps/web/src/app.js` | Allow the exact SDK and creative origins in the Content Security Policy after selecting a provider. |
 
 For a local wiring check, temporarily replace the exports in `public/ad-config.js` with this **fake provider**. Restart the server after editing the file because static assets are cached in memory:
@@ -54,7 +54,7 @@ export const provider = {
 };
 ```
 
-Open the feed, scroll a post close to the viewport, and confirm that its labelled slot shows the test creative. Repeat with `return { filled: false }` or a thrown error and confirm the house ad remains. Restore the default exports before committing. This checks the app's adapter wiring; it does not test a real publisher SDK or authorise third-party requests.
+Open the feed, scroll a post close to the viewport, and confirm that its labelled slot shows the test creative. Repeat with `return { filled: false }` or a thrown error and confirm the placeholder remains. Restore the default exports before committing. This checks the app's adapter wiring; it does not test a real publisher SDK or authorise third-party requests.
 
 When the CMP changes permission, dispatch `new Event('larpedin:ad-consent-changed')`. This re-observes placements so those withheld before consent can become eligible. On withdrawal, the production adapter must additionally tear down active vendor resources and follow the vendor's consent-mode requirements; re-observation alone does not undo SDK side effects. CMP state must be available synchronously to `hasAdConsent` and failure must resolve to false.
 

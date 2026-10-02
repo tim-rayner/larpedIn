@@ -12,6 +12,7 @@ import { createEditionClient, EditionExpired } from './edition-client.js';
 import { pageOf, readCursor } from './feed.js';
 import { showNewsSource } from './flags.js';
 
+const gamesRoot = fileURLToPath(new URL('../../../packages/games/src/', import.meta.url));
 const publicRoot = fileURLToPath(new URL('../public/', import.meta.url));
 const staticFiles = new Map();
 const types = {'.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.svg':'image/svg+xml','.webp':'image/webp','.jpg':'image/jpeg','.txt':'text/plain; charset=utf-8'};
@@ -52,6 +53,7 @@ export function createHandler({editions = createEditionClient({baseUrl: process.
    }
    const legalPath=url.pathname.length>1?url.pathname.replace(/\/$/,''):url.pathname;
    if(legalPaths.includes(legalPath))return send(request,200,renderLegalPage(legalPath),'text/html; charset=utf-8','public, max-age=300');
+   if(url.pathname==='/games/buzzle.js'){const source=await readFile(resolve(gamesRoot,'buzzle.js'));return send(request,200,source,'text/javascript; charset=utf-8','public, max-age=3600');}
    if(url.pathname==='/characters.js')return send(request,200,browserCharactersModule,'text/javascript; charset=utf-8','no-cache');
    if(url.pathname==='/api/feed'){
     const cursorParam = url.searchParams.get('cursor');

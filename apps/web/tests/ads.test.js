@@ -6,7 +6,7 @@ test('each post has an identifiable, explicitly labelled advertisement with usef
   const html = renderAdSlot({ postId: 'post-1', index: 0 });
   assert.match(html, /id="ad-post-1"/);
   assert.match(html, /Advertisement/);
-  assert.match(html, /Ship something/);
+  assert.match(html, /YOUR ADVERT HERE/);
   assert.notEqual(html, renderAdSlot({ postId: 'post-2', index: 1 }));
 });
 

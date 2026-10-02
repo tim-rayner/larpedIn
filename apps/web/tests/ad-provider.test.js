@@ -12,7 +12,7 @@ test('third-party providers are never contacted before both consent and visibili
   assert.equal(calls, 1);
 });
 
-test('provider errors preserve the house ad fallback instead of breaking the feed', async () => {
+test('provider errors preserve the placeholder advert fallback instead of breaking the feed', async () => {
   const controller = createAdController({provider: {render: async () => {throw new Error('blocked');}}});
   assert.equal(await controller.load({id:'post-2', consent:true, visible:true}), 'fallback');
 });
@@ -31,7 +31,7 @@ test('a stalled provider times out and leaves the page usable', async () => {
   assert.equal(await controller.load({id:'post-4', consent:true, visible:true}), 'fallback');
 });
 
-test('an unfilled auction retains the house advertisement', async () => {
+test('an unfilled auction retains the placeholder advertisement', async () => {
  const controller=createAdController({provider:{render:async()=>({filled:false})}});
  assert.equal(await controller.load({id:'empty',consent:true,visible:true}),'fallback');
 });

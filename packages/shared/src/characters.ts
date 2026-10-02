@@ -27,7 +27,7 @@ export const CHARACTERS: Readonly<Record<string, CharacterRecord>> = Object.free
     name: 'Mark Zuckerbot', company: 'MehTa', avatar: 'mark', legacyAvatar: 'priya',
     tagline: 'Connecting people to increasingly relevant advertisements.', location: 'Menlo Park, California',
     reply: 'Love this authentic human interaction. We have already turned it into an ad format.',
-    message: 'Hey Scam. Quick question. If I wear a new chain to the keynote, does that count as a product launch?',
+    message: 'Hey {user}. Quick question. If I wear a new chain to the keynote, does that count as a product launch?',
     messageReply: 'Let’s circle back once the algorithm has decided whether we are friends.',
     realCompany: {id: 'meta', name: 'Meta', aliases: ['Meta Platforms', 'Meta Platforms, Inc.', 'Facebook'], newsAliases: ['Mark Zuckerberg', 'Instagram', 'WhatsApp', 'Threads'], source: 'https://investor.atmeta.com/leadership-and-governance/'},
   },

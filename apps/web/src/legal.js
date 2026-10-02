@@ -79,7 +79,7 @@ const pages = {
 <p>${operator(env)} (“we”, “us”) runs LarpedIn. This policy explains what happens to information when you use the site. Last updated ${UPDATED}.</p>
 
 <h2>What stays in your browser</h2>
-<p>LarpedIn stores your posts, reactions, comments, saved posts, notifications and appearance (light or dark) in your browser's local storage, under keys beginning <code>larpedin:</code>. This data is not sent to us and we cannot see it. It is used only to make the site work as you left it, so it is not tracking. You can remove it at any time with the button below, or by clearing your browser's site data.</p>
+<p>LarpedIn stores your posts, reactions, comments, saved posts, notifications, appearance (light or dark), your onboarding progress and your chosen tech mogul (including the name, company, tagline, location and photo of any custom mogul you create) in your browser's local storage, under keys beginning <code>larpedin:</code>. This data is not sent to us and we cannot see it. It is used only to make the site work as you left it, so it is not tracking. You can remove it at any time with the button below, or by clearing your browser's site data.</p>
 <p><button type="button" class="button outline" id="clear-local">Clear my local activity</button> <span id="clear-status" class="muted" role="status"></span></p>
 
 <h2>What reaches our server</h2>

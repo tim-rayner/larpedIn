@@ -9,6 +9,7 @@
     "check:performance": "bun scripts/performance.js"
   },
   "dependencies": {
+    "@larpedin/games": "workspace:*",
     "@larpedin/shared": "workspace:*"
   },
   "devDependencies": {

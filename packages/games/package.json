@@ -1,0 +1,8 @@
+{
+  "name": "@larpedin/games",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Daily mini games. Plain browser-safe ES modules, served to the web app as-is.",
+  "exports": { ".": "./src/index.js", "./buzzle": "./src/buzzle.js" }
+}

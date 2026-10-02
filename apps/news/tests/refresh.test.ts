@@ -100,3 +100,10 @@ test('overlapping Refreshes are ignored while one is running', async () => {
   const [a, b] = await Promise.all([refresh(h.services), refresh(h.services)]);
   expect([a.status, b.status].sort()).toEqual(['busy', 'published']);
 });
+
+test('an Edition lists the most recent stories first, undated ones last', async () => {
+  const {newestFirst} = await import('../src/refresh');
+  const story = (url: string, publishedAt?: string) => ({title: url, url, description: '', categories: [], ...(publishedAt ? {publishedAt} : {})});
+  const ordered = newestFirst([story('undated'), story('old', '2026-01-01T00:00:00Z'), story('new', '2026-03-01T00:00:00Z')]);
+  expect(ordered.map(s => s.url)).toEqual(['new', 'old', 'undated']);
+});

@@ -40,6 +40,11 @@ async function fetchStories({fetchImpl, feedUrl, maxItems}: Services): Promise<S
   } finally { clearTimeout(timeout); }
 }
 
+const publishedTime = (story: Story) => (story.publishedAt ? Date.parse(story.publishedAt) : Number.NEGATIVE_INFINITY);
+
+/** Feed order: most recent first, stories without a date last. */
+export const newestFirst = (stories: Story[]): Story[] => [...stories].sort((a, b) => publishedTime(b) - publishedTime(a));
+
 /**
  * Builds a new Edition from the latest Stories and makes it current.
  * Posts already satirised by the model are reused, so only new Stories spend model budget.
@@ -48,7 +53,7 @@ export async function refresh(services: Services): Promise<RefreshResult> {
   const {kv, images, fetchImpl, log, now, random} = services;
   if (!(await kv.setIfAbsent(lockKey, LOCK_SECONDS))) return {status: 'busy'};
   try {
-    const stories = await fetchStories(services);
+    const stories = newestFirst(await fetchStories(services));
     const previous = await readCurrentEdition(kv);
     const reusable = new Map<string, Post>((previous?.posts ?? []).filter(post => post.generated).map(post => [post.sourceUrl, post]));
 
