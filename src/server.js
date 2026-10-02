@@ -10,6 +10,7 @@ import { legalPaths, renderLegalPage } from './legal.js';
 import { news, people } from './data.js';
 import { browserCharactersModule, currentUser } from './characters.js';
 import { createNewsFeedService, FeedCursorError } from './news-feed.js';
+import { showNewsSource } from './flags.js';
 try { loadEnvFile(fileURLToPath(new URL('../.env', import.meta.url))); } catch (error) { if (error.code !== 'ENOENT') throw error; }
 const publicRoot = fileURLToPath(new URL('../public/', import.meta.url));
 const newsFeed = createNewsFeedService();
@@ -41,7 +42,7 @@ export function createServer(){return http.createServer(async (req,res)=>{
   if(legalPaths.includes(legalPath))return send(req,res,200,renderLegalPage(legalPath),'text/html; charset=utf-8','public, max-age=300');
   if(url.pathname==='/characters.js')return send(req,res,200,browserCharactersModule,'text/javascript; charset=utf-8','no-cache');
   if(url.pathname==='/api/feed'){
-   try { const feed=await newsFeed.getFeed({cursor:url.searchParams.get('cursor')??undefined});return send(req,res,200,JSON.stringify({...feed,posts:undefined,html:feed.posts.map((post,index)=>renderPost(post,feed.offset+index)).join('')}),'application/json','public, max-age=60, stale-while-revalidate=300'); }
+   try { const feed=await newsFeed.getFeed({cursor:url.searchParams.get('cursor')??undefined});const sourceVisible=showNewsSource();const headlines=sourceVisible?feed.headlines:feed.headlines?.map(({title,time})=>({title,time}));const posts=sourceVisible?feed.posts:feed.posts.map(({sourceUrl,sourceName,...post})=>({...post,social:'News desk'}));return send(req,res,200,JSON.stringify({...feed,headlines,sourceName:sourceVisible?'TechCrunch':undefined,posts:undefined,html:posts.map((post,index)=>renderPost(post,feed.offset+index)).join('')}),'application/json','public, max-age=60, stale-while-revalidate=300'); }
    catch(error){console.error(`News feed unavailable: ${error.message}`);return send(req,res,error instanceof FeedCursorError?409:503,JSON.stringify({error:error instanceof FeedCursorError?'This news edition has expired. Refresh to load the latest stories.':'Live tech news is temporarily unavailable.'}),'application/json','no-store');}
   }
   if(url.pathname.startsWith('/api/news-image/')){

@@ -18,6 +18,8 @@ Open http://localhost:3000. The app binds to localhost by default. For a contain
 
 Copy `.env.example` to `.env` and set `OPENAI_API_KEY` to enable generated satire. The default `OPENAI_MODEL` is `gpt-6-luna`; it can be changed without modifying source. Add `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to share each news edition and its generated pages across server instances for one hour. Keys are read only by the server and `.env` is ignored by Git. Without an OpenAI key, the site still loads current RSS stories using a deterministic parody fallback. Without Upstash, it falls back to an in-memory cache.
 
+News attribution is hidden by default: no publisher name, story links, author names or "Read full story" buttons are shown or sent to the browser. Set `SHOW_NEWS_SOURCE=true` to restore them (e.g. once a sponsorship is agreed).
+
 ## What works
 
 - Responsive three-column feed and mobile bottom navigation.

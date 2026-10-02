@@ -82,15 +82,16 @@ function observeAds(root=document){
 window.addEventListener('larpedin:ad-consent-changed',()=>{adObserver?.disconnect();observeAds();});
 async function context(){const r=await fetch('/api/context');if(!r.ok)throw new Error('Could not load this section. Please try again.');return r.json();}
 let feedObserver;
+let sourceName='';
 function updateLatestNews(headlines){
  if(!Array.isArray(headlines)||!headlines.length)return;
  const list=$('#latest-news');
  const items=headlines.slice(0,5).map(headline=>{
-  const item=document.createElement('li'),link=document.createElement('a'),title=document.createElement('strong'),meta=document.createElement('small'),source=document.createElement('span');
-  link.href=headline.url;link.target='_blank';link.rel='noopener noreferrer';title.textContent=headline.title;meta.textContent=headline.time||'Recently';source.textContent=` · ${headline.author||'TechCrunch'}`;
-  meta.append(source);link.append(title,meta);item.append(link);return item;
+  const item=document.createElement('li'),link=document.createElement(headline.url?'a':'div'),title=document.createElement('strong'),meta=document.createElement('small'),source=document.createElement('span');
+  if(headline.url){link.href=headline.url;link.target='_blank';link.rel='noopener noreferrer';}title.textContent=headline.title;meta.textContent=headline.time||'Recently';
+  if(headline.url){source.textContent=` · ${headline.author||sourceName}`;meta.append(source);}link.append(title,meta);item.append(link);return item;
  });
- list.replaceChildren(...items);$('.news-subtitle').textContent='Latest from TechCrunch · Refreshed hourly';
+ list.replaceChildren(...items);$('.news-subtitle').textContent=sourceName?`Latest from ${sourceName} · Refreshed hourly`:'Latest technology news · Refreshed hourly';
 }
 function setFeedLoader(mode){
  const loader=$('#feed-loader'),spinner=$('.feed-spinner',loader),label=$('[data-feed-loader-text]',loader),retry=$('[data-action="load-more"]',loader);
@@ -110,6 +111,7 @@ async function fetchNewsPage({replace=false}={}){
   if(!response.ok)throw new Error('Live feed unavailable');
   const feed=await response.json();
   if(!feed.html)throw new Error('Live feed was empty');
+  sourceName=feed.sourceName||'';
   updateLatestNews(feed.headlines);
   const existing=new Set($$('.post').map(post=>post.id));
   if(replace)$('#posts').innerHTML=feed.html;
@@ -151,7 +153,7 @@ const actions={
  async news(button){const {news}=await context();const n=news[Number(button.dataset.news)||0];modal(n[0],`<p>${escape(n[3])}</p><p class="muted">LarpedIn News. Entirely fictional, alarmingly plausible.</p>`);},
  bingo(){modal('Daily Buzzword Bingo',`<p>Tick off the words you’ve already seen in your feed.</p><div class="bingo-grid">${['Synergy','Disruption','AI-powered','Humbled','Circle back','Thought leader','10x','Building in public','Game-changer'].map(t=>`<button data-action="bingo-cell" aria-pressed="false">${t}</button>`).join('')}</div><p class="muted" id="bingo-status">Three in a row. Zero business value.</p>`);},
  'bingo-cell'(button){button.setAttribute('aria-pressed',String(button.getAttribute('aria-pressed')!=='true'));const cells=$$('.bingo-grid button').map(b=>b.getAttribute('aria-pressed')==='true');const win=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]].some(row=>row.every(n=>cells[n]));$('#bingo-status').textContent=win?'Bingo! You are now a certified thought leader.':'Three in a row. Zero business value.';},
- about(){modal('Genuine news. Satirical takes.',`<p>LarpedIn is an independent, light-hearted parody of professional networking and tech thought leadership.</p><p>Executive personas, commentary and engagement figures are fictional. Linked TechCrunch headlines and summaries come from its public RSS feed; follow “Read full story here” for the original reporting. We are not affiliated with LinkedIn, TechCrunch or any company being parodied. This is satire, not fake news: the stories are real, the jokes are ours, and the characters parody public figures.</p><p><a href="/disclaimer">Full disclaimer</a> · <a href="/terms">Terms</a></p><p class="muted">Built to load quickly. Designed to make the news useful before your next stand-up.</p>`);},
+ about(){modal('Genuine news. Satirical takes.',`<p>LarpedIn is an independent, light-hearted parody of professional networking and tech thought leadership.</p><p>Executive personas, commentary and engagement figures are fictional. ${sourceName?`Linked ${sourceName} headlines and summaries come from its public RSS feed; follow “Read full story here” for the original reporting. We are not affiliated with LinkedIn, ${sourceName} or any company being parodied.`:'Headlines and summaries are based on real, publicly available tech news. We are not affiliated with LinkedIn or any company being parodied.'} This is satire, not fake news: the stories are real, the jokes are ours, and the characters parody public figures.</p><p><a href="/disclaimer">Full disclaimer</a> · <a href="/terms">Terms</a></p><p class="muted">Built to load quickly. Designed to make the news useful before your next stand-up.</p>`);},
  accessibility(){modal('Accessibility',`<p>Use Tab to navigate, Enter to activate buttons and Escape to close dialogs. Press / to search.</p><p>The feed works without JavaScript for reading. Motion follows your device preference. Light, dark and system themes are available under Me.</p><button class="button outline" data-action="profile">Open appearance settings</button>`);},
  privacy(){modal('Privacy & ad choices',`<p>This version uses local storage for your posts, reactions, comments, saved items and appearance. They stay in this browser.</p><p>All advertisements currently promote fictional house brands. No third-party ad scripts or tracking are loaded.</p><p class="muted">Live advertising needs a configured publisher account and a suitable consent platform. Your feed works regardless of whether an ad loads.</p><p><a href="/privacy">Read the full Privacy Policy</a></p><button class="button outline" data-action="clear-local">Clear my local activity</button>`);},
  'clear-local'(){modal('Clear your local activity?',`<p>This removes your posts, comments, reactions and saved posts from this browser.</p><div class="privacy-actions"><button class="button outline" data-action="close-dialog">Keep my activity</button><button class="button primary" data-action="confirm-clear">Clear activity</button></div>`);},

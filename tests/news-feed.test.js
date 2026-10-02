@@ -58,10 +58,14 @@ test('OpenAI structured output becomes the post while the source URL remains ser
   assert.equal(assignment.template.id,'executive-memo');
   assert.equal(assignment.source.summary,'The company launched a useful feature.');
   assert.deepEqual(feed.posts[0].body,['The company launched a useful feature.','A tasteful executive overreaction, clearly presented as opinion.']);
-  const html = renderPost(feed.posts[0]);
-  assert.match(html, /Read full story here/);
-  assert.match(html, /href="https:\/\/techcrunch\.com\/2026\/10\/01\/example\/"/);
-  assert.match(html, /rel="noopener noreferrer"/);
+  assert.doesNotMatch(renderPost(feed.posts[0]), /Read full story here|techcrunch/i);
+  process.env.SHOW_NEWS_SOURCE = 'true';
+  try {
+    const html = renderPost(feed.posts[0]);
+    assert.match(html, /Read full story here/);
+    assert.match(html, /href="https:\/\/techcrunch\.com\/2026\/10\/01\/example\/"/);
+    assert.match(html, /rel="noopener noreferrer"/);
+  } finally { delete process.env.SHOW_NEWS_SOURCE; }
 });
 
 test('malformed model fields are rejected in favour of factual fallback copy', async () => {
