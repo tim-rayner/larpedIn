@@ -6,7 +6,8 @@ Verified locally on 2 October 2026 with Node 26.4 and installed Google Chrome.
 
 - **9/9 ad component tests pass.** Test-first cycles observed failure before adding provider consent/visibility gating, error handling, deduplication, timeout, no-fill handling and cancellation. Ad markup escapes untrusted content and requires a placement ID.
 - **Browser checks pass** at 320, 375, 390, 768, 1024 and 1440px with no horizontal overflow.
-- Publishing renders a server-formatted post, escaping literal script content. Simulated reactions increase, Walter and Jesse reply, likes/comments/saves work, and local posts/comments survive reload.
+- Publishing renders a server-formatted post, escaping literal script content. Simulated reactions increase, Elong and Mark reply, likes/comments/saves work, and local posts/comments survive reload.
+- Live news tests cover RSS entity decoding, TechCrunch-only source and image URLs, current right-rail headlines, cached image bytes, ten non-repeating satire structures, server-owned factual leads, malformed model-output rejection, stable fictional-character routing, opaque cursor pagination without duplicates, hourly Upstash caching across server instances, structured OpenAI output, and escaped original-story links.
 - Incoming simulated replies preserve the reader's choice to collapse comments.
 - Search, empty state, category filters, network/jobs navigation and simulated messaging work.
 - Mobile account access exposes privacy, saved posts and appearance. Dialogs have accessible names, Escape closes them, and a forced light theme retains button contrast on a dark-system device.
@@ -49,7 +50,7 @@ Reference material:
 - [LinkedIn homepage FAQ](https://www.linkedin.com/help/linkedin/answer/a518701)
 - [Public feed reference captured by Guideflow](https://www.guideflow.com/tutorial/how-to-change-industry-in-linkedin-profile)
 
-Intentional differences are LarpedIn branding, fictional Breaking Bad cartoon avatars, satire category filters, a compact joke line and one labelled ad slot per post.
+Intentional differences are LarpedIn branding, fictional tech CEO cartoon avatars, satire category filters, a compact joke line and one labelled ad slot per post.
 
 ## Scope
 

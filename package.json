@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Professional networking. Amateur opinions. A fast, independent satire.",
+  "description": "Genuine news. Satirical takes. A fast, independent satire.",
   "engines": {
     "node": ">=22"
   },

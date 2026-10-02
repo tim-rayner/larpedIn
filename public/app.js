@@ -1,5 +1,6 @@
 import { createAdController } from './ad-controller.js';
 import { provider, hasAdConsent } from './ad-config.js';
+import { characters, currentUser } from '/characters.js';
 const $ = (s, root=document) => root.querySelector(s);
 const $$ = (s, root=document) => [...root.querySelectorAll(s)];
 const escape = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -7,19 +8,16 @@ const storage = {get(key,fallback){try{return JSON.parse(localStorage.getItem('l
 const av=(name)=>`<span class="avatar avatar-${name}" aria-hidden="true"></span>`;
 const saved = new Set(storage.get('saved',[]));
 const liked = new Set(storage.get('liked',[]));
-const comments = storage.get('comments',{});
+const legacyAvatars={gavin:'elong-husk',priya:'mark-zuckerbot',martin:'satire-nadella',oliver:'jensen-hype',nadia:'sundar-pitchai',you:'scam-altman'};
+const publicCharacter=id=>characters[id];
+const modernize=entry=>{const c=publicCharacter(entry.characterId||legacyAvatars[entry.avatar]);return c?{...entry,characterId:c.characterId,name:c.name,avatar:c.characterId==='scam-altman'?'you':c.avatar,role:c.role}:entry;};
+const comments=Object.fromEntries(Object.entries(storage.get('comments',{})).map(([id,list])=>[id,list.map(modernize)]));
 let ownPosts = storage.get('posts',[]).slice(0,20);
-let activeFilter='all', view='home', toastTimer, lastFocus;
+let activeFilter='all', view='home', toastTimer, lastFocus, feedNextCursor, feedLoading=false, feedHasMore=false, feedLoadFailed=false;
 const simulations=new Map();
-const notifications=storage.get('notifications',[]).slice(0,12);
-const characterReplies = [
- {name:'Walter White',avatar:'gavin',role:'Founder at Heisenberg Labs',text:'Finally. Someone who understands the chemistry of a scalable personal brand.'},
- {name:'Jesse Pinkman',avatar:'priya',role:'Co-founder | Yeah, science. And SaaS.',text:'Yo, this is what I’ve been saying! Except with fewer words and more exclamation marks.'},
- {name:'Gustavo Fring',avatar:'martin',role:'CEO at Los Pollos Hermanos',text:'An excellent perspective. At Los Pollos Hermanos, we believe consistency is the foundation of growth.'},
- {name:'Mike Ehrmantraut',avatar:'oliver',role:'Operations consultant',text:'Here’s what you’re gonna do. Close this app. Ship the feature. No half measures.'},
- {name:'Skyler White',avatar:'nadia',role:'CFO at A1A',text:'Interesting. And where, exactly, is the revenue coming from?'},
- {name:'Walter White',avatar:'gavin',role:'Founder at Heisenberg Labs',text:'I am not in the engagement business. I am in the empire business.'}
-];
+const notifications=storage.get('notifications',[]).slice(0,12).map(modernize);
+const replyIds=['elong-husk','mark-zuckerbot','satire-nadella','jensen-hype','sundar-pitchai','elong-husk'];
+const characterReplies=replyIds.map(characterId=>{const c=publicCharacter(characterId);return {...c,text:c.reply};});
 const theme=storage.get('theme','system');if(theme!=='system')document.documentElement.dataset.theme=theme;
 function toast(text){clearTimeout(toastTimer);$('#toast').textContent=text;$('#toast').hidden=false;toastTimer=setTimeout(()=>$('#toast').hidden=true,4200);}
 function modal(title,html){lastFocus=document.activeElement;$('#dialog-title').textContent=title;$('#dialog-content').innerHTML=html;if(!$('#dialog').open)$('#dialog').showModal();}
@@ -30,12 +28,13 @@ function persistPosts(){storage.set('posts',ownPosts);}
 function applyFeed(){
  const query=$('#search').value.trim().toLowerCase();let count=0;
  $$('.post').forEach(post=>{const allowed=(activeFilter==='all'||activeFilter==='saved'&&saved.has(post.id)||post.dataset.category===activeFilter)&&post.textContent.toLowerCase().includes(query)&&!post.dataset.dismissed;post.hidden=!allowed;if(allowed)count++;});
- $('#empty-state').hidden=count>0||view!=='home';$('.feed-end').hidden=count===0||view!=='home';
+ $('#empty-state').hidden=count>0||view!=='home'||feedHasMore;$('.feed-end').hidden=count===0||view!=='home'||feedHasMore;
+ $('#feed-loader').hidden=view!=='home'||!feedHasMore;
 }
 function home(){view='home';$('#alternate-view').hidden=true;$('#posts').hidden=false;$('.welcome').hidden=false;$('.composer').hidden=false;$('.feed-controls').hidden=false;setNav('home');applyFeed();}
 function setNav(action){$$('.nav-item').forEach(b=>{b.classList.toggle('active',b.dataset.action===action);if(b.dataset.action===action)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});}
 function selectView(title,description,content,action){view=action;setNav(action);$('#posts').hidden=true;$('.welcome').hidden=true;$('.composer').hidden=true;$('.feed-controls').hidden=true;$('.feed-end').hidden=true;$('#empty-state').hidden=true;$('#alternate-view').hidden=false;$('#alternate-view').innerHTML=`<section class="card view-card"><h2>${title}</h2><p>${description}</p>${content}<button class="text-button" data-action="home">← Back to feed</button></section>`;window.scrollTo({top:0});}
-function commentMarkup(c){return `<li class="new-comment">${av(c.avatar||'you')}<div class="comment-bubble"><strong>${escape(c.name||'Saul Goodman')}</strong><small>${escape(c.role||'Attorney | Personal brand enthusiast')}</small><p>${escape(c.text)}</p></div></li>`;}
+function commentMarkup(c){return `<li class="new-comment">${av(c.avatar||'you')}<div class="comment-bubble"><strong>${escape(c.name||currentUser.name)}</strong><small>${escape(c.role||currentUser.role)}</small><p>${escape(c.text)}</p></div></li>`;}
 function addComment(post,c,persist=true){$('.comment-list',post).insertAdjacentHTML('beforeend',commentMarkup(c));if(persist){(comments[post.id]??=[]).push(c);comments[post.id]=comments[post.id].slice(-30);storage.set('comments',comments);}const n=(Number(post.dataset.extraComments)||0)+1;post.dataset.extraComments=n;const base=ownPosts.some(p=>p.id===post.id)?0:Number($('.comment-count',post).dataset.base||0);$('.comment-count',post).textContent=`${base+n} comments`;}
 function restorePost(post){
  const id=post.id;const like=$('[data-action="like"]',post);like.setAttribute('aria-pressed',String(liked.has(id)));if(liked.has(id))like.lastChild.textContent='Liked';
@@ -67,7 +66,7 @@ async function renderOwn(record,simulate=true){
  if(!response.ok)throw new Error('Your post couldn’t be published. Please try again.');const result=await response.json();record.id=result.id;
  $('#posts').insertAdjacentHTML('afterbegin',result.html);const post=document.getElementById(result.id);restorePost(post);observeAds(post);if(simulate)startSimulation(post,record);return post;
 }
-function compose(){modal('Create a post',`<form id="compose-form"><div class="compose-identity">${av('you')}<div><strong>Saul Goodman</strong><small>Post to 2.3M fictional followers</small></div></div><label for="post-text" class="form-label">What’s your hot take?</label><textarea id="post-text" name="text" maxlength="3000" required placeholder="I’m humbled to announce that I have an opinion…"></textarea><p class="muted">Your post stays in this browser. Reactions and character replies are simulated.</p><p id="compose-error" class="form-error" role="alert" hidden></p><div class="compose-footer"><small><span id="char-count">0</span> / 3,000 characters</small><button class="button primary" type="submit">Post</button></div></form>`);$('#post-text').focus();$('#post-text').addEventListener('input',()=>$('#char-count').textContent=$('#post-text').value.length);}
+function compose(){modal('Create a post',`<form id="compose-form"><div class="compose-identity">${av('you')}<div><strong>${escape(currentUser.name)}</strong><small>CEO of ${escape(currentUser.company)} · Post to 2.3M fictional followers</small></div></div><label for="post-text" class="form-label">What’s your hot take?</label><textarea id="post-text" name="text" maxlength="3000" required placeholder="I’m humbled to announce that I have an opinion…"></textarea><p class="muted">Your post stays in this browser. Reactions and character replies are simulated.</p><p id="compose-error" class="form-error" role="alert" hidden></p><div class="compose-footer"><small><span id="char-count">0</span> / 3,000 characters</small><button class="button primary" type="submit">Post</button></div></form>`);$('#post-text').focus();$('#post-text').addEventListener('input',()=>$('#char-count').textContent=$('#post-text').value.length);}
 const adController=createAdController({provider}); // No third-party requests with the default configuration.
 let adObserver;
 function observeAds(root=document){
@@ -82,9 +81,57 @@ function observeAds(root=document){
 }
 window.addEventListener('larpedin:ad-consent-changed',()=>{adObserver?.disconnect();observeAds();});
 async function context(){const r=await fetch('/api/context');if(!r.ok)throw new Error('Could not load this section. Please try again.');return r.json();}
+let feedObserver;
+function updateLatestNews(headlines){
+ if(!Array.isArray(headlines)||!headlines.length)return;
+ const list=$('#latest-news');
+ const items=headlines.slice(0,5).map(headline=>{
+  const item=document.createElement('li'),link=document.createElement('a'),title=document.createElement('strong'),meta=document.createElement('small'),source=document.createElement('span');
+  link.href=headline.url;link.target='_blank';link.rel='noopener noreferrer';title.textContent=headline.title;meta.textContent=headline.time||'Recently';source.textContent=` · ${headline.author||'TechCrunch'}`;
+  meta.append(source);link.append(title,meta);item.append(link);return item;
+ });
+ list.replaceChildren(...items);$('.news-subtitle').textContent='Latest from TechCrunch · Refreshed hourly';
+}
+function setFeedLoader(mode){
+ const loader=$('#feed-loader'),spinner=$('.feed-spinner',loader),label=$('[data-feed-loader-text]',loader),retry=$('[data-action="load-more"]',loader);
+ feedLoadFailed=mode==='error';loader.hidden=mode==='done'||view!=='home';spinner.hidden=mode==='error';retry.hidden=mode!=='error';
+ label.textContent=mode==='error'?'The next round of thought leadership missed its quarterly target.':mode==='loading'?'Loading more questionable insight…':'More stories are ready below.';
+}
+function observeFeedLoader(){
+ if(!('IntersectionObserver' in window)){const retry=$('#feed-loader [data-action="load-more"]');retry.hidden=false;retry.textContent='Load more';return;}
+ feedObserver??=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting&&!feedLoadFailed)loadNextNewsPage();}),{rootMargin:'700px 0px'});
+ feedObserver.observe($('#feed-loader'));
+}
+async function fetchNewsPage({replace=false}={}){
+ if(feedLoading||(!replace&&!feedNextCursor))return;
+ feedLoading=true;setFeedLoader('loading');
+ try{
+  const response=await fetch('/api/feed'+(replace?'':`?cursor=${encodeURIComponent(feedNextCursor)}`));
+  if(!response.ok)throw new Error('Live feed unavailable');
+  const feed=await response.json();
+  if(!feed.html)throw new Error('Live feed was empty');
+  updateLatestNews(feed.headlines);
+  const existing=new Set($$('.post').map(post=>post.id));
+  if(replace)$('#posts').innerHTML=feed.html;
+  else {const template=document.createElement('template');template.innerHTML=feed.html;const nodes=[...template.content.children].filter(node=>!existing.has(node.id));$('#posts').append(...nodes);}
+  feedNextCursor=feed.nextCursor;feedHasMore=Boolean(feed.hasMore&&feed.nextCursor);
+  const fresh=$$('.post').filter(post=>replace||!existing.has(post.id));fresh.forEach(restorePost);observeAds();
+  $('#feed-status').textContent=feed.generated?'Live tech news. Freshly overanalysed by AI.':'Live tech news. Lightly seasoned with executive nonsense.';
+  if(feed.stale)$('#feed-status').textContent+=' Showing the last good edition.';
+  setFeedLoader(feedHasMore?'ready':'done');if(feedHasMore)setTimeout(observeFeedLoader,0);applyFeed();
+  return true;
+ }catch{
+  if(replace){feedHasMore=false;setFeedLoader('done');$('#feed-status').textContent='Live news is taking a coffee break. Showing the house edition.';$('.news-subtitle').textContent='House edition while live news reloads.';}
+  else setFeedLoader('error');
+  return false;
+ }finally{feedLoading=false;}
+}
+const loadNewsFeed=()=>{ $('#feed-status').textContent='Loading live tech news…';return fetchNewsPage({replace:true});};
+const loadNextNewsPage=()=>fetchNewsPage();
 const actions={
  home(){activeFilter='all';$('#search').value='';$$('[data-filter]').forEach(b=>{b.classList.toggle('selected',b.dataset.filter==='all');b.setAttribute('aria-pressed',String(b.dataset.filter==='all'));});home();window.scrollTo({top:0});},
  compose,
+ 'load-more':loadNextNewsPage,
  'close-dialog':closeModal,
  like(button,post){liked.has(post.id)?liked.delete(post.id):liked.add(post.id);storage.set('liked',[...liked]);button.setAttribute('aria-pressed',String(liked.has(post.id)));button.lastChild.textContent=liked.has(post.id)?'Liked':'Like';updateLikes(post);},
  comment(button,post){post.dataset.commentsToggled='true';$('.comments',post).hidden=!$('.comments',post).hidden;if(!$('.comments',post).hidden)$('input',post).focus();},
@@ -94,19 +141,19 @@ const actions={
  hide(button,post){post.dataset.dismissed='true';applyFeed();toast('Post hidden until you refresh. Less thought leadership. More peace.');},
  repost(button,post){const yes=button.getAttribute('aria-pressed')==='true';button.setAttribute('aria-pressed',String(!yes));button.lastChild.textContent=yes?'Repost':'Reposted';toast(yes?'Repost removed.':'Reposted to your fictional network.');},
  async share(button,post){const url=location.origin+'/'+(post.id.startsWith('user-')?'':'#'+post.id);try{await navigator.clipboard.writeText(url);toast(post.id.startsWith('user-')?'LarpedIn link copied. Your local post is visible only to you.':'Link copied. Share the thought leadership.');}catch{modal('Share LarpedIn',`<p>Copy this link:</p><input aria-label="Share link" value="${escape(url)}" readonly>`);}},
- profile(){modal('Saul Goodman',`<div class="compose-identity">${av('you')}<div><h2>Saul Goodman</h2><p>Attorney. Thought leader. Personal brand enthusiast.</p></div></div><p><strong>2,347,891</strong> fictional followers. <strong>${ownPosts.length}</strong> magnificent posts.</p><p class="muted">This is your parody account. Posts, comments and saved items are stored only in this browser.</p><div class="account-links"><button class="button outline" data-action="saved">Saved posts</button><button class="button outline" data-action="privacy">Privacy & ad choices</button><button class="button outline" data-action="about">About</button></div><h3>Appearance</h3><div class="theme-options">${['system','light','dark'].map(t=>`<button class="button outline" data-action="theme" data-theme="${t}">${t[0].toUpperCase()+t.slice(1)}</button>`).join('')}</div><button class="button primary" data-action="compose">Create a post</button>`);},
+ profile(){modal(currentUser.name,`<div class="compose-identity">${av('you')}<div><h2>${escape(currentUser.name)}</h2><p>CEO of ${escape(currentUser.company)}. ${escape(currentUser.tagline)}</p></div></div><p><strong>2,347,891</strong> fictional followers. <strong>${ownPosts.length}</strong> magnificent posts.</p><p class="muted">This is your parody account. Posts, comments and saved items are stored only in this browser.</p><div class="account-links"><button class="button outline" data-action="saved">Saved posts</button><button class="button outline" data-action="privacy">Privacy & ad choices</button><button class="button outline" data-action="about">About</button></div><h3>Appearance</h3><div class="theme-options">${['system','light','dark'].map(t=>`<button class="button outline" data-action="theme" data-theme="${t}">${t[0].toUpperCase()+t.slice(1)}</button>`).join('')}</div><button class="button primary" data-action="compose">Create a post</button>`);},
  theme(button){const t=button.dataset.theme;storage.set('theme',t);if(t==='system')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t;toast(`Appearance: ${t}`);},
- async network(){const {people}=await context();selectView('Grow your echo chamber','Connect with the most confidently incorrect minds in Albuquerque.',people.map(p=>`<div class="network-person">${av(p.avatar)}<div><strong>${p.name}</strong><p>${p.role}</p><button class="button outline" data-action="follow" aria-pressed="false">+ Follow</button></div></div>`).join(''),'network');},
- jobs(){selectView('Jobs you’re overqualified to pretend at','Fictional opportunities. Realistic job descriptions.',[['Chief AI Whisperer','Heisenberg Labs','Remote · Exposure + equity'],['Senior Synergy Architect','Los Pollos Hermanos','Albuquerque · 12 years of AI experience required'],['Head of Personal Branding','Saul Goodman & Associates','Hybrid · Must be comfortable being humbled']].map(([title,company,details])=>`<div class="job"><span aria-hidden="true">${company.slice(0,1)}</span><div><h3>${title}</h3><p>${company}<br>${details}</p><button class="button outline" data-action="job">Easy Apply</button></div></div>`).join(''),'jobs');},
+ async network(){const {people}=await context();selectView('Grow your echo chamber','Connect with the most confidently incorrect minds in tech.',people.map(p=>`<div class="network-person">${av(p.avatar)}<div><strong>${escape(p.name)}</strong><p>${escape(p.role)}</p><button class="button outline" data-action="follow" aria-pressed="false">+ Follow</button></div></div>`).join(''),'network');},
+ jobs(){selectView('Jobs you’re overqualified to pretend at','Fictional opportunities. Realistic job descriptions.',[['Chief Alignment Whisperer','ClosedAI','San Francisco · Must agree with the model'],['Senior Vibe Engineer','Teslol','Remote · Office attendance required'],['Head of Personal Branding','MehTa','Hybrid · Must be comfortable being algorithmically authentic']].map(([title,company,details])=>`<div class="job"><span aria-hidden="true">${company.slice(0,1)}</span><div><h3>${title}</h3><p>${company}<br>${details}</p><button class="button outline" data-action="job">Easy Apply</button></div></div>`).join(''),'jobs');},
  job(){modal('Your application is already inspirational',`<p>This job is fictional. So is the requirement for 12 years of experience in generative AI.</p><p>No CV, personal information or actual application has been sent.</p><button class="button primary" data-action="close-dialog">Back to networking</button>`);},
- notifications(){const items=notifications.length?notifications:[{name:'Walter White',avatar:'gavin',text:'endorsed you for “Confidently explaining things”.'},{name:'Jesse Pinkman',avatar:'priya',text:'viewed your profile. Yeah, networking!'},{name:'Gustavo Fring',avatar:'martin',text:'invited you to scale your personal brand.'}];modal('Notifications',`<p class="muted">Your fictional network is paying attention.</p>${items.map(n=>`<div class="notification-row">${av(n.avatar)}<div><p><strong>${n.name}</strong> ${n.text}</p><small>Simulated activity</small></div></div>`).join('')}`);$('.notification-dot').textContent='0';},
- messages(){modal('Messaging',`<div class="compose-identity">${av('priya')}<div><strong>Jesse Pinkman</strong><small>Fictional conversation</small></div></div><div class="chat-thread"><p><strong>Jesse:</strong> Yo Saul. Quick question. Can we put “AI-powered” on the pitch deck if we used spellcheck?</p></div><form id="message-form" class="comment-form"><label class="sr-only" for="message-input">Your message</label><input id="message-input" name="message" maxlength="500" placeholder="Write a message…" required><button class="button primary">Send</button></form><p class="muted">This conversation is simulated. Nothing is sent to anyone.</p>`);},
+ notifications(){const defaults=[['elong-husk','endorsed you for “Confidently explaining things”.'],['mark-zuckerbot','viewed your profile. The algorithm made him do it.'],['satire-nadella','invited you to scale your personal brand.']].map(([id,text])=>({...publicCharacter(id),text}));const items=notifications.length?notifications:defaults;modal('Notifications',`<p class="muted">Your fictional network is paying attention.</p>${items.map(n=>`<div class="notification-row">${av(n.avatar)}<div><p><strong>${escape(n.name)}</strong> ${escape(n.text)}</p><small>Simulated activity</small></div></div>`).join('')}`);$('.notification-dot').textContent='0';},
+ messages(){const friend=publicCharacter('mark-zuckerbot');modal('Messaging',`<div class="compose-identity">${av(friend.avatar)}<div><strong>${escape(friend.name)}</strong><small>Fictional conversation</small></div></div><div class="chat-thread"><p><strong>${escape(friend.name.split(' ')[0])}:</strong> ${escape(friend.message)}</p></div><form id="message-form" class="comment-form"><label class="sr-only" for="message-input">Your message</label><input id="message-input" name="message" maxlength="500" placeholder="Write a message…" required><button class="button primary">Send</button></form><p class="muted">This conversation is simulated. Nothing is sent to anyone.</p>`);},
  async news(button){const {news}=await context();const n=news[Number(button.dataset.news)||0];modal(n[0],`<p>${escape(n[3])}</p><p class="muted">LarpedIn News. Entirely fictional, alarmingly plausible.</p>`);},
  bingo(){modal('Daily Buzzword Bingo',`<p>Tick off the words you’ve already seen in your feed.</p><div class="bingo-grid">${['Synergy','Disruption','AI-powered','Humbled','Circle back','Thought leader','10x','Building in public','Game-changer'].map(t=>`<button data-action="bingo-cell" aria-pressed="false">${t}</button>`).join('')}</div><p class="muted" id="bingo-status">Three in a row. Zero business value.</p>`);},
  'bingo-cell'(button){button.setAttribute('aria-pressed',String(button.getAttribute('aria-pressed')!=='true'));const cells=$$('.bingo-grid button').map(b=>b.getAttribute('aria-pressed')==='true');const win=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]].some(row=>row.every(n=>cells[n]));$('#bingo-status').textContent=win?'Bingo! You are now a certified thought leader.':'Three in a row. Zero business value.';},
- about(){modal('Professional networking. Amateur opinions.',`<p>LarpedIn is an independent, light-hearted parody of professional networking and tech thought leadership.</p><p>The Breaking Bad characters are fictional fan-parody personas. Posts, engagement figures, news, jobs and conversations are made up. We are not affiliated with LinkedIn or the creators of Breaking Bad.</p><p class="muted">Built to load quickly. Designed to make you laugh before your next stand-up.</p>`);},
+ about(){modal('Genuine news. Satirical takes.',`<p>LarpedIn is an independent, light-hearted parody of professional networking and tech thought leadership.</p><p>Executive personas, commentary and engagement figures are fictional. Linked TechCrunch headlines and summaries come from its public RSS feed; follow “Read full story here” for the original reporting. We are not affiliated with LinkedIn, TechCrunch or any company being parodied. This is satire, not fake news: the stories are real, the jokes are ours, and the characters parody public figures.</p><p><a href="/disclaimer">Full disclaimer</a> · <a href="/terms">Terms</a></p><p class="muted">Built to load quickly. Designed to make the news useful before your next stand-up.</p>`);},
  accessibility(){modal('Accessibility',`<p>Use Tab to navigate, Enter to activate buttons and Escape to close dialogs. Press / to search.</p><p>The feed works without JavaScript for reading. Motion follows your device preference. Light, dark and system themes are available under Me.</p><button class="button outline" data-action="profile">Open appearance settings</button>`);},
- privacy(){modal('Privacy & ad choices',`<p>This version uses local storage for your posts, reactions, comments, saved items and appearance. They stay in this browser.</p><p>All advertisements currently promote fictional house brands. No third-party ad scripts or tracking are loaded.</p><p class="muted">Live advertising needs a configured publisher account and a suitable consent platform. Your feed works regardless of whether an ad loads.</p><button class="button outline" data-action="clear-local">Clear my local activity</button>`);},
+ privacy(){modal('Privacy & ad choices',`<p>This version uses local storage for your posts, reactions, comments, saved items and appearance. They stay in this browser.</p><p>All advertisements currently promote fictional house brands. No third-party ad scripts or tracking are loaded.</p><p class="muted">Live advertising needs a configured publisher account and a suitable consent platform. Your feed works regardless of whether an ad loads.</p><p><a href="/privacy">Read the full Privacy Policy</a></p><button class="button outline" data-action="clear-local">Clear my local activity</button>`);},
  'clear-local'(){modal('Clear your local activity?',`<p>This removes your posts, comments, reactions and saved posts from this browser.</p><div class="privacy-actions"><button class="button outline" data-action="close-dialog">Keep my activity</button><button class="button primary" data-action="confirm-clear">Clear activity</button></div>`);},
  'confirm-clear'(){['posts','liked','saved','comments','notifications'].forEach(k=>{try{localStorage.removeItem('larpedin:'+k);}catch{}});location.reload();},
  sponsor(){modal('Your ad. Our questionable audience.',`<p>Every post has its own labelled advertisement. For now, the sponsors are fictional. The coffee round is also imaginary.</p><p>This space is ready for future publisher integration and direct sponsorships. No payments are being taken.</p><p class="muted">The house ad stays visible if an ad is blocked, slow or unavailable.</p><button class="button primary" data-action="close-dialog">Sounds disruptive</button>`);},
@@ -114,15 +161,15 @@ const actions={
  groups(){modal('Your echo chambers',`<p><strong>AI Will Replace Everything Except My Job</strong><br>18,403 fictional experts. One shared opinion.</p><p><strong>Founders Who Definitely Sleep Four Hours</strong><br>Currently offline. Probably napping.</p><button class="button outline" data-action="network">Find thought leaders</button>`);},
  newsletter(){modal('The Weekly Humblebrag',`<p>A newsletter about the newsletter I’m building in public.</p><p>This week: why having a newsletter is the new having a startup.</p><button class="button primary" data-action="subscribe">Subscribe, theoretically</button>`);},
  subscribe(){toast('Subscribed in spirit. No email address required.');closeModal();},
- events(){modal('Upcoming fictional events',`<p><strong>Disrupting Disruption: A Fireside Chat</strong><br>Friday, 2pm · An unnecessarily expensive co-working space.</p><p><strong>No Half Measures: Shipping With Mike</strong><br>Saturday, 10am · Meeting cancelled. Go ship something.</p><button class="button outline" data-action="rsvp">Attend, in spirit</button>`);},
+ events(){modal('Upcoming fictional events',`<p><strong>Disrupting Disruption: A Fireside Chat</strong><br>Friday, 2pm · An unnecessarily expensive co-working space.</p><p><strong>More Compute, More Problems with Jensen Hype</strong><br>Saturday, 10am · Bring your own power station.</p><button class="button outline" data-action="rsvp">Attend, in spirit</button>`);},
  rsvp(){toast('You’re on the fictional guest list.');closeModal();}
 };
 document.addEventListener('click',async event=>{const filter=event.target.closest('[data-filter]');if(filter){activeFilter=filter.dataset.filter;$$('[data-filter]').forEach(b=>{b.classList.toggle('selected',b===filter);b.setAttribute('aria-pressed',String(b===filter));});home();return;}const button=event.target.closest('[data-action]');if(!button)return;try{await actions[button.dataset.action]?.(button,button.closest('.post'));}catch{toast('Something didn’t load. Please try again.');}});
 document.addEventListener('submit',async event=>{
  const form=event.target;
  if(form.matches('.search')){event.preventDefault();home();applyFeed();return;}
- if(form.matches('.comment-form')&&form.id!=='message-form'){event.preventDefault();const input=$('input',form);if(!input.value.trim())return;addComment(form.closest('.post'),{name:'Saul Goodman',avatar:'you',text:input.value.trim()});input.value='';return;}
- if(form.id==='message-form'){event.preventDefault();const text=$('#message-input').value.trim();if(!text)return;$('.chat-thread').insertAdjacentHTML('beforeend',`<p class="reply"><strong>You:</strong> ${escape(text)}</p><p><strong>Jesse:</strong> That’s what I’m talking about. Let’s circle back, yo.</p>`);$('#message-input').value='';return;}
+ if(form.matches('.comment-form')&&form.id!=='message-form'){event.preventDefault();const input=$('input',form);if(!input.value.trim())return;addComment(form.closest('.post'),{...currentUser,avatar:'you',text:input.value.trim()});input.value='';return;}
+ if(form.id==='message-form'){event.preventDefault();const text=$('#message-input').value.trim();if(!text)return;const friend=publicCharacter('mark-zuckerbot');$('.chat-thread').insertAdjacentHTML('beforeend',`<p class="reply"><strong>You:</strong> ${escape(text)}</p><p><strong>${escape(friend.name.split(' ')[0])}:</strong> ${escape(friend.messageReply)}</p>`);$('#message-input').value='';return;}
  if(form.id!=='compose-form')return;event.preventDefault();const text=$('#post-text').value.trim();if(!text)return;const button=$('button[type=submit]',form);button.disabled=true;button.textContent='Posting…';
  try{const record={text,id:'user-'+crypto.randomUUID(),reactions:0,tick:0};const post=await renderOwn(record,false);ownPosts.unshift(record);if(ownPosts.length>20){const removed=ownPosts.pop();document.getElementById(removed.id)?.remove();clearInterval(simulations.get(removed.id));simulations.delete(removed.id);}persistPosts();closeModal();activeFilter='all';$('#search').value='';$$('[data-filter]').forEach(b=>{b.classList.toggle('selected',b.dataset.filter==='all');b.setAttribute('aria-pressed',String(b.dataset.filter==='all'));});home();startSimulation(post,record);post.scrollIntoView({block:'start'});toast('Published. Your fictional empire is listening.');}
  catch(error){$('#compose-error').hidden=false;$('#compose-error').textContent=error.message;button.disabled=false;button.textContent='Post';}
@@ -130,6 +177,6 @@ document.addEventListener('submit',async event=>{
 $('#search').addEventListener('input',()=>{home();applyFeed();});
 $('.sort select').addEventListener('change',event=>{const sorted=$$('.post').sort((a,b)=>event.target.value==='top'?Number(b.dataset.likes)-Number(a.dataset.likes):Number(a.dataset.index)-Number(b.dataset.index));if(event.target.value==='recent')sorted.sort((a,b)=>Number(b.id.startsWith('user-'))-Number(a.id.startsWith('user-')));$('#posts').append(...sorted);});
 document.addEventListener('keydown',event=>{if(event.key==='/'&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)&&!$('#dialog').open){event.preventDefault();$('#search').focus();}});
-$$('.post').forEach(restorePost);observeAds();
+await loadNewsFeed();
 for(const record of [...ownPosts].reverse()){try{await renderOwn(record);}catch{toast('Saved posts could not be restored. Refresh to try again.');break;}}
 applyFeed();

@@ -1,8 +1,10 @@
 # LarpedIn
 
-Professional networking. Amateur opinions.
+Genuine news. Satirical takes.
 
-An independent LinkedIn-inspired parody with a Breaking Bad character network. Server-rendered HTML, vanilla JavaScript, native CSS, locally hosted assets, and no runtime package dependencies.
+An independent LinkedIn-inspired parody with a fictional tech CEO network. Server-rendered HTML, vanilla JavaScript, native CSS, locally hosted assets, and no runtime package dependencies.
+
+The main feed turns current stories from the TechCrunch RSS feed into short satirical CEO posts and always links back to the original reporting. Ten non-repeating post structures vary each generated page, while every post begins with the server-owned RSS summary so the factual source remains separate from the fictional reaction.
 
 ## Run
 
@@ -14,14 +16,18 @@ npm start
 
 Open http://localhost:3000. The app binds to localhost by default. For a container or hosted service, set `HOST=0.0.0.0` and `PORT` as appropriate. `npm run dev` watches server source changes; restart after changing cached static assets.
 
+Copy `.env.example` to `.env` and set `OPENAI_API_KEY` to enable generated satire. The default `OPENAI_MODEL` is `gpt-6-luna`; it can be changed without modifying source. Add `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to share each news edition and its generated pages across server instances for one hour. Keys are read only by the server and `.env` is ignored by Git. Without an OpenAI key, the site still loads current RSS stories using a deterministic parody fallback. Without Upstash, it falls back to an in-memory cache.
+
 ## What works
 
 - Responsive three-column feed and mobile bottom navigation.
-- Saul Goodman account with 2.3 million fictional followers.
-- Publish text posts (up to 3,000 characters). Watch a roughly 40-second simulated burst of reactions and replies from Walter, Jesse, Gus, Mike and Skyler.
+- Scam Altman, CEO of ClosedAI, account with 2.3 million fictional followers.
+- Publish text posts (up to 3,000 characters). Watch a roughly 40-second simulated burst of reactions and replies from the fictional CEO cast.
 - Reactions, comments, saved posts and up to 20 own posts persist in this browser.
 - Search, category filtering, Top/Recent sorting, hide, follow, repost and share controls.
 - Fictional network, jobs, notifications, messaging, news and buzzword bingo.
+- An infinitely scrolling TechCrunch feed, paginated from a stable server-side RSS snapshot and mapped to fictional CEOs, with cached article photography and an original-story link on every post.
+- The right rail shows the five latest headlines from the same hourly news edition.
 - Light/dark/system appearance; keyboard navigation and native accessible dialogs.
 - One clearly labelled, server-rendered house advertisement per post. Provider abstraction supports lazy loading, explicit consent, deduplication, timeout, cancellation and no-fill fallback.
 - Complete initial feed readable with JavaScript disabled.
@@ -52,6 +58,10 @@ See [docs/VERIFICATION.md](docs/VERIFICATION.md) for measured results and limita
 - `src/server.js`: Node HTTP server, SSR, bounded post-preview endpoint, security headers and asset caching.
 - `src/render.js`: reusable HTML components and page assembly.
 - `src/data.js`: fictional feed, news and people.
+- `src/characters.js`: fictional character definitions and private real-company routing metadata.
+- `src/news-feed.js`: bounded RSS parsing, factual source anchoring, current headlines, cached article imagery, cursor pagination, story-to-character routing, validated OpenAI generation and an hourly shared feed cache.
+- `src/satire-templates.js`: ten varied post structures assigned before generation and stored with the cached page.
+- `src/upstash-cache.js`: dependency-free Upstash REST cache with a one-hour expiry and graceful fallback.
 - `src/ads.js`: safe ad markup and house campaigns.
 - `public/app.js`: progressively enhanced feed interactions and simulated activity.
 - `public/ad-controller.js`: independently tested provider lifecycle.
@@ -69,4 +79,4 @@ Serve behind HTTPS with a reverse proxy/CDN for production. Initial HTML is shar
 
 ## Credits and scope
 
-Independent fan parody; not affiliated with LinkedIn or the creators of Breaking Bad. Character illustrations are AI-generated editorial caricatures. All seeded posts and engagement are fictional. Phosphor icons are MIT-licensed; the license is included in `public/assets/icons/LICENSE`. Generated image provenance is recorded in [docs/ASSETS.md](docs/ASSETS.md).
+Independent parody; not affiliated with LinkedIn or any featured company. Character illustrations are AI-generated editorial caricatures. All names, companies, posts and engagement shown in the product are fictional. Phosphor icons are MIT-licensed; the license is included in `public/assets/icons/LICENSE`. Generated image provenance is recorded in [docs/ASSETS.md](docs/ASSETS.md).
