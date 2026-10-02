@@ -1,7 +1,16 @@
 // Server-only source of truth. Never serialize CHARACTERS directly to a client.
 // Real company metadata is for future news routing, not public-facing copy.
 export const CURRENT_USER_ID = 'scam-altman';
-export const CHARACTERS = Object.freeze({
+export interface CharacterRecord {
+  name: string; company: string; avatar: string; legacyAvatar: string;
+  tagline: string; location: string; reply: string; message?: string; messageReply?: string;
+  realCompany: {id: string; name: string; aliases: string[]; newsAliases?: string[]; source: string};
+}
+export interface PublicCharacter {
+  characterId: string; name: string; company: string; avatar: string; legacyAvatar: string;
+  role: string; tagline: string; location: string; reply: string; message?: string; messageReply?: string;
+}
+export const CHARACTERS: Readonly<Record<string, CharacterRecord>> = Object.freeze({
   'scam-altman': {
     name: 'Scam Altman', company: 'ClosedAI', avatar: 'scam', legacyAvatar: 'you',
     tagline: 'Building the future. Access subject to subscription.', location: 'San Francisco, California',
@@ -43,7 +52,7 @@ export const CHARACTERS = Object.freeze({
 });
 
 // Explicit allowlist: future private fields cannot accidentally enter a response.
-export function publicCharacter(characterId) {
+export function publicCharacter(characterId: string): PublicCharacter {
   const c = CHARACTERS[characterId];
   if (!c) throw new Error(`Unknown character: ${characterId}`);
   return Object.freeze({characterId, name: c.name, company: c.company, avatar: c.avatar,
@@ -51,46 +60,19 @@ export function publicCharacter(characterId) {
     tagline: c.tagline, location: c.location, reply: c.reply,
     ...(c.message ? {message: c.message, messageReply: c.messageReply} : {})});
 }
-export const PUBLIC_CHARACTERS = Object.freeze(Object.fromEntries(
+export const PUBLIC_CHARACTERS: Readonly<Record<string, PublicCharacter>> = Object.freeze(Object.fromEntries(
   Object.keys(CHARACTERS).map(id => [id, publicCharacter(id)])
 ));
-export const currentUser = PUBLIC_CHARACTERS[CURRENT_USER_ID];
+export const currentUser = PUBLIC_CHARACTERS[CURRENT_USER_ID]!;
 
 // Exact, case-insensitive entity lookup; avoids false positives in headline text.
-const normalizeCompany = name => name.trim().toLowerCase().replace(/[.,]/g, '').replace(/\s+/g, ' ');
-export const REAL_COMPANY_TO_CHARACTER = Object.freeze(Object.fromEntries(
+const normalizeCompany = (name: string) => name.trim().toLowerCase().replace(/[.,]/g, '').replace(/\s+/g, ' ');
+export const REAL_COMPANY_TO_CHARACTER: Readonly<Record<string, string>> = Object.freeze(Object.fromEntries(
   Object.entries(CHARACTERS).flatMap(([id, c]) =>
     [c.realCompany.id, c.realCompany.name, ...c.realCompany.aliases].map(name => [normalizeCompany(name), id]))
 ));
-export function characterForCompany(companyName) {
+export function characterForCompany(companyName: unknown): PublicCharacter | undefined {
   if (typeof companyName !== 'string') return undefined;
   const id = REAL_COMPANY_TO_CHARACTER[normalizeCompany(companyName)];
-  return Object.hasOwn(PUBLIC_CHARACTERS, id) ? PUBLIC_CHARACTERS[id] : undefined;
+  return id !== undefined && Object.hasOwn(PUBLIC_CHARACTERS, id) ? PUBLIC_CHARACTERS[id] : undefined;
 }
-
-export function characterForNewsStory(story) {
-  const searchable = [story.title, story.description, ...(story.categories || [])].filter(Boolean).join(' ').toLowerCase();
-  const containsTerm = term => new RegExp(`(^|[^a-z0-9])${term.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z0-9]|$)`, 'i').test(searchable);
-  for (const [id, c] of Object.entries(CHARACTERS)) {
-    const terms = [c.realCompany.name, ...c.realCompany.aliases, ...(c.realCompany.newsAliases || [])];
-    if (terms.some(containsTerm)) return PUBLIC_CHARACTERS[id];
-  }
-  const topicRoutes = [
-    ['elong-husk', ['transportation','mobility','space','vehicle','energy']],
-    ['mark-zuckerbot', ['social','privacy','creator','advertising','messaging']],
-    ['satire-nadella', ['enterprise','security','developer','cloud','productivity']],
-    ['jensen-hype', ['hardware','compute','chip','robotics','gaming']],
-    ['sundar-pitchai', ['search','mobile','commerce','apps']],
-    ['scam-altman', ['ai','artificial intelligence','startup','fundraising']],
-  ];
-  for (const [id, terms] of topicRoutes) {
-    if (terms.some(containsTerm)) return PUBLIC_CHARACTERS[id];
-  }
-  const ids = Object.keys(PUBLIC_CHARACTERS);
-  let hash = 0;
-  for (const char of story.url || story.title || '') hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return PUBLIC_CHARACTERS[ids[hash % ids.length]];
-}
-
-// A generated browser module containing fictional fields only.
-export const browserCharactersModule = `export const characters = ${JSON.stringify(PUBLIC_CHARACTERS)};\nexport const currentUser = characters[${JSON.stringify(CURRENT_USER_ID)}];\n`;

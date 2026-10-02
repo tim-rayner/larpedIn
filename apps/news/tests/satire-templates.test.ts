@@ -1,6 +1,6 @@
-import test from 'node:test';
+import { test } from 'bun:test';
 import assert from 'node:assert/strict';
-import { chooseSatireTemplates, SATIRE_TEMPLATES } from '../src/satire-templates.js';
+import { chooseSatireTemplates, SATIRE_TEMPLATES } from '../src/satire-templates.ts';
 
 test('ten distinct satire structures are available', () => {
   assert.equal(SATIRE_TEMPLATES.length,10);

@@ -1,4 +1,5 @@
-export const SATIRE_TEMPLATES = Object.freeze([
+export interface SatireTemplate { id: string; name: string; structure: string }
+export const SATIRE_TEMPLATES: readonly SatireTemplate[] = Object.freeze([
   Object.freeze({
     id:'executive-memo',
     name:'Executive memo',
@@ -51,14 +52,14 @@ export const SATIRE_TEMPLATES = Object.freeze([
   }),
 ]);
 
-export function chooseSatireTemplates(count, random = Math.random) {
+export function chooseSatireTemplates(count: number, random: () => number = Math.random): SatireTemplate[] {
   const pool=[...SATIRE_TEMPLATES];
-  const chosen=[];
+  const chosen: SatireTemplate[]=[];
   while(chosen.length<count){
     if(!pool.length)pool.push(...SATIRE_TEMPLATES);
     const value=Number(random());
     const index=Math.min(pool.length-1,Math.max(0,Math.floor((Number.isFinite(value)?value:0)*pool.length)));
-    chosen.push(pool.splice(index,1)[0]);
+    chosen.push(pool.splice(index,1)[0]!);
   }
   return chosen;
 }

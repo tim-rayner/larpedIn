@@ -1,0 +1,12 @@
+{
+  "name": "@larpedin/news",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch api/index.ts"
+  },
+  "dependencies": {
+    "@larpedin/shared": "workspace:*"
+  }
+}

@@ -4,20 +4,16 @@
   "private": true,
   "type": "module",
   "description": "Genuine news. Satirical takes. A fast, independent satire.",
-  "engines": {
-    "node": ">=22"
-  },
+  "workspaces": ["apps/*", "packages/*"],
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
-    "test": "node --test tests/*.test.js",
-    "test:browser": "node scripts/verify-browser.js",
-    "check:performance": "node scripts/performance.js"
+    "dev": "bun run --filter './apps/*' dev",
+    "dev:web": "bun run --filter @larpedin/web dev",
+    "dev:news": "bun run --filter @larpedin/news dev",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "devDependencies": {
-    "@phosphor-icons/core": "^2.1.1",
-    "@playwright/test": "^1.63.0",
-    "lighthouse": "^13.5.0",
-    "sharp": "^0.35.5"
+    "@types/bun": "latest",
+    "typescript": "^5.9.0"
   }
 }
