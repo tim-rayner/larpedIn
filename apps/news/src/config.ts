@@ -23,11 +23,13 @@ const clamp = (value: string | undefined, fallback: number, max: number) => Math
 export function servicesFromEnv(env: Record<string, string | undefined> = process.env, log: Services['log'] = console): Services {
   const upstashUrl = env.UPSTASH_REDIS_REST_URL?.trim();
   const upstashToken = env.UPSTASH_REDIS_REST_TOKEN?.trim();
-  const {R2_ACCOUNT_ID: accountId, R2_ACCESS_KEY_ID: accessKeyId, R2_SECRET_ACCESS_KEY: secretAccessKey, R2_BUCKET: bucket} = env;
+  const r2Names = ['R2_ACCOUNT_ID', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'R2_BUCKET'] as const;
+  const [accountId, accessKeyId, secretAccessKey, bucket] = r2Names.map(name => env[name]?.trim());
+  const missingR2 = r2Names.filter(name => !env[name]?.trim());
   const kv = upstashUrl && upstashToken ? createUpstashKeyValueStore({url: upstashUrl, token: upstashToken}) : createMemoryKeyValueStore();
   const images = accountId && accessKeyId && secretAccessKey && bucket ? createR2ImageStore({accountId, accessKeyId, secretAccessKey, bucket}) : createMemoryImageStore();
   if (!(upstashUrl && upstashToken)) log.warn('UPSTASH_REDIS_REST_URL/TOKEN not set: using in-memory edition store (dev only).');
-  if (!(accountId && accessKeyId && secretAccessKey && bucket)) log.warn('R2_* not set: using in-memory image store (dev only).');
+  if (!(accountId && accessKeyId && secretAccessKey && bucket)) log.warn(`${missingR2.join(', ')} not set: using in-memory image store (dev only).`);
   return {
     kv, images, fetchImpl: fetch, now: Date.now, random: Math.random, log,
     feedUrl: env.TECH_NEWS_RSS_URL || TECHCRUNCH_FEED_URL,

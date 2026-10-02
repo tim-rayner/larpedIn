@@ -2,12 +2,14 @@ import { createAdController } from './ad-controller.js';
 import { provider, hasAdConsent } from './ad-config.js';
 import { characters } from '/characters.js';
 import { greetingFor } from './greeting.js';
+import { installPhotoFallback } from './photo-fallback.js';
 import { createIdentityStore, applyIdentity, applyText, firstName } from './identity.js';
 import * as buzzle from '/games/buzzle.js';
 const $ = (s, root=document) => root.querySelector(s);
 const $$ = (s, root=document) => [...root.querySelectorAll(s)];
 const escape = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const storage = {get(key,fallback){try{return JSON.parse(localStorage.getItem('larpedin:'+key))??fallback;}catch{return fallback;}},set(key,value){try{localStorage.setItem('larpedin:'+key,JSON.stringify(value));return true;}catch{return false;}}};
+installPhotoFallback();
 const identity=createIdentityStore();
 let me=identity.resolve(characters); // who "you" are: a built-in or custom mogul, kept in this browser only
 applyIdentity(me);
