@@ -8,4 +8,4 @@ The runtime references only local assets. No image API, remote font or external 
 - `public/assets/icons/*.svg`: selected Phosphor Core icons, copied from the locked development dependency; MIT license included. No hand-drawn icon paths.
 - The favicon and on-page wordmark use an original blue speech-bubble mark with a geometric white `L` and pale-blue sparkle. The colours fit the site palette without reusing LinkedIn's tile or `in` letterform.
 
-Raster assets are checked in. `node scripts/assets.js` refreshes the icon subset. Optional second and third arguments point to replacement image sources for WebP optimisation; generation services are not required to run or rebuild the app.
+Raster assets are checked in. `cd apps/web && bun scripts/assets.js` refreshes the icon subset. Optional second and third arguments point to replacement image sources for WebP optimisation; generation services are not required to run or rebuild the app.

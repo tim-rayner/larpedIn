@@ -11,3 +11,4 @@ docs/screenshots/
 docs/lighthouse*
 docs/browser-results.json
 docs/performance.json
+.vercel/

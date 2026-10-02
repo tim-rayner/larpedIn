@@ -179,6 +179,10 @@ document.addEventListener('submit',async event=>{
 $('#search').addEventListener('input',()=>{home();applyFeed();});
 $('.sort select').addEventListener('change',event=>{const sorted=$$('.post').sort((a,b)=>event.target.value==='top'?Number(b.dataset.likes)-Number(a.dataset.likes):Number(a.dataset.index)-Number(b.dataset.index));if(event.target.value==='recent')sorted.sort((a,b)=>Number(b.id.startsWith('user-'))-Number(a.id.startsWith('user-')));$('#posts').append(...sorted);});
 document.addEventListener('keydown',event=>{if(event.key==='/'&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)&&!$('#dialog').open){event.preventDefault();$('#search').focus();}});
-await loadNewsFeed();
+const feedRoot=$('#feed');
+if(feedRoot.dataset.edition){
+ sourceName=feedRoot.dataset.sourceName||'';feedNextCursor=feedRoot.dataset.nextCursor||undefined;feedHasMore=Boolean(feedNextCursor);
+ $$('.post').forEach(restorePost);observeAds();setFeedLoader(feedHasMore?'ready':'done');if(feedHasMore)setTimeout(observeFeedLoader,0);applyFeed();
+}else await loadNewsFeed();
 for(const record of [...ownPosts].reverse()){try{await renderOwn(record);}catch{toast('Saved posts could not be restored. Refresh to try again.');break;}}
 applyFeed();

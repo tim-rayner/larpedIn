@@ -32,11 +32,11 @@ This is an interface example, not a working Google or Meta adapter. A real SDK m
 
 | File | Responsibility |
 |---|---|
-| `src/ads.js` | Render a labelled slot and the house creative in the initial HTML. |
+| `apps/web/src/ads.js` | Render a labelled slot and the house creative in the initial HTML. |
 | `public/ad-config.js` | Export the selected provider and a synchronous consent check. This is the only file that needs an account-specific adapter. |
 | `public/ad-controller.js` | Enforce consent and visibility, prevent duplicate requests, and return `filled` or `fallback`. |
 | `public/app.js` | Watch slots as they approach the viewport and replace the house creative only when the adapter has mounted an ad. |
-| `src/server.js` | Allow the exact SDK and creative origins in the Content Security Policy after selecting a provider. |
+| `apps/web/src/app.js` | Allow the exact SDK and creative origins in the Content Security Policy after selecting a provider. |
 
 For a local wiring check, temporarily replace the exports in `public/ad-config.js` with this **fake provider**. Restart the server after editing the file because static assets are cached in memory:
 
@@ -58,14 +58,14 @@ Open the feed, scroll a post close to the viewport, and confirm that its labelle
 
 When the CMP changes permission, dispatch `new Event('larpedin:ad-consent-changed')`. This re-observes placements so those withheld before consent can become eligible. On withdrawal, the production adapter must additionally tear down active vendor resources and follow the vendor's consent-mode requirements; re-observation alone does not undo SDK side effects. CMP state must be available synchronously to `hasAdConsent` and failure must resolve to false.
 
-Run `npm test` for the provider-boundary tests, then `npm run test:browser` with the server running to check the complete feed. Re-run a mobile performance audit with the real provider enabled; the house-ad performance numbers in `docs/VERIFICATION.md` do not cover an ad network.
+Run `bun test` for the provider-boundary tests, then `bun run test:browser` (in `apps/web`) with the server running to check the complete feed. Re-run a mobile performance audit with the real provider enabled; the house-ad performance numbers in `docs/VERIFICATION.md` do not cover an ad network.
 
 ## Connecting revenue
 
 1. Choose the publisher product and obtain account/site approval. Google **AdSense** or **Ad Manager** serve website inventory; Google **Ads** is the advertiser side. Meta Ads is for buying campaigns, not a drop-in website revenue adapter. Verify the provider's current web publisher support before selecting it.
 2. Choose a supported unit size and reserve its full height at each breakpoint before loading it. Current compact house slots are not assumed to meet any vendor's minimum format requirements. A 250px creative needs a 250px reserved area.
 3. Integrate an appropriate consent platform. Keep third-party requests disabled until eligible. If a jurisdiction/vendor permits contextual ads without consent, implement that as a separate reviewed policy; it is not enabled here.
-4. Add only the SDK/iframe/connect domains required by the actual provider to the CSP in `src/server.js`. Avoid broad wildcard allowances.
+4. Add only the SDK/iframe/connect domains required by the actual provider to the CSP in `apps/web/src/app.js`. Avoid broad wildcard allowances.
 5. Add the publisher's verified `ads.txt`, vendor labels and operational privacy information. No placeholder publisher IDs or false authorisations are shipped.
 6. Test no-fill, ad blockers, timeout, navigation, consent withdrawal, mobile layout and duplicate requests using the actual SDK in its supported test mode.
 7. Evaluate production placement density and content eligibility with the provider. A slot per post does not guarantee every slot should receive paid inventory, provider approval, or revenue. Keep sponsor copy clearly separated from reaction controls and never encourage clicks.

@@ -1,0 +1,20 @@
+{
+  "name": "@larpedin/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch api/index.js",
+    "test:browser": "bun scripts/verify-browser.js",
+    "check:performance": "bun scripts/performance.js"
+  },
+  "dependencies": {
+    "@larpedin/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@phosphor-icons/core": "^2.1.1",
+    "@playwright/test": "^1.63.0",
+    "lighthouse": "^13.5.0",
+    "sharp": "^0.35.5"
+  }
+}

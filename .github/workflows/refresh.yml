@@ -1,0 +1,32 @@
+name: Refresh news edition
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  # Also the way to publish the first Edition after a fresh deploy.
+  workflow_dispatch:
+
+concurrency:
+  group: refresh-news
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Call the news service
+        env:
+          NEWS_SERVICE_URL: ${{ secrets.NEWS_SERVICE_URL }}
+          REFRESH_SECRET: ${{ secrets.REFRESH_SECRET }}
+        run: |
+          set -euo pipefail
+          status=$(curl -sS --max-time 290 -o response.json -w '%{http_code}' \
+            -X POST -H "Authorization: Bearer ${REFRESH_SECRET}" \
+            "${NEWS_SERVICE_URL%/}/refresh")
+          cat response.json; echo
+          # 409 means another Refresh is already running, which is fine.
+          if [ "$status" != "200" ] && [ "$status" != "409" ]; then
+            echo "Refresh failed with HTTP $status" >&2
+            exit 1
+          fi
