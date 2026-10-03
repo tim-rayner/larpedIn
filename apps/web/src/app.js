@@ -82,8 +82,9 @@ export function createHandler({editions = createEditionClient({baseUrl: process.
      const edition = cursor ? await editions.get(cursor.editionId) : await editions.getLatest();
      const page = pageOf(edition,cursor?.offset ?? 0,{sourceVisible:showNewsSource()});
      if(!page.posts.length)throw new EditionExpired('Feed cursor is beyond the available stories');
-     const {posts,...rest}=page;
-     return send(request,200,JSON.stringify({...rest,html:posts.map((post,index)=>renderPost(post,page.offset+index)).join('')}),'application/json',cursor?'public, max-age=3600':'public, max-age=60, stale-while-revalidate=300');
+     const {posts,headlines,sourceName,hasMore,nextCursor,status}=page;
+     // Explicit allowlist: Edition internals (id, offset, generated, stale) stay server-side.
+     return send(request,200,JSON.stringify({headlines,sourceName,hasMore,nextCursor,status,html:posts.map((post,index)=>renderPost(post,page.offset+index)).join('')}),'application/json',cursor?'public, max-age=3600':'public, max-age=60, stale-while-revalidate=300');
     } catch(error){
      const expired = error instanceof EditionExpired;
      if(!expired)console.error(`News feed unavailable: ${error.message}`);
