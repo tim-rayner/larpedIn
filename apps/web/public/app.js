@@ -126,8 +126,7 @@ async function fetchNewsPage({replace=false}={}){
   else {const template=document.createElement('template');template.innerHTML=feed.html;const nodes=[...template.content.children].filter(node=>!existing.has(node.id));$('#posts').append(...nodes);}
   feedNextCursor=feed.nextCursor;feedHasMore=Boolean(feed.hasMore&&feed.nextCursor);
   const fresh=$$('.post').filter(post=>replace||!existing.has(post.id));fresh.forEach(restorePost);observeAds();
-  $('#feed-status').textContent=feed.generated?'Live tech news. Freshly overanalysed by AI.':'Live tech news. Lightly seasoned with executive nonsense.';
-  if(feed.stale)$('#feed-status').textContent+=' Showing the last good edition.';
+  $('#feed-status').textContent=feed.status;
   setFeedLoader(feedHasMore?'ready':'done');if(feedHasMore)setTimeout(observeFeedLoader,0);applyFeed();
   return true;
  }catch{

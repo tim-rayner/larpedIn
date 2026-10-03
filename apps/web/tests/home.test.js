@@ -71,7 +71,8 @@ test('a mid-scroll reader keeps their Edition after a newer one is published', a
   const older = edition('bbbbbbbbbbbbbbbb');
   const {get} = web({editions: {latest: edition('cccccccccccccccc'), bbbbbbbbbbbbbbbb: older}});
   const page = await (await get('/api/feed?cursor=bbbbbbbbbbbbbbbb.6')).json();
-  expect(page.editionId).toBe('bbbbbbbbbbbbbbbb');
+  expect(page.nextCursor).toBeUndefined();
+  expect(page.html).toContain('id="rss-7"');
 });
 
 test('an expired or malformed cursor tells the reader to refresh', async () => {
