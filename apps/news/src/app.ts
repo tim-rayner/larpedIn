@@ -34,6 +34,7 @@ export function createHandler(services: Services) {
       }
 
       if (request.method !== 'GET' && request.method !== 'HEAD') return json({error: 'Method not allowed'}, 405);
+      if (services.readToken && !authorised(request, services.readToken)) return json({error: 'Unauthorized'}, 401);
       if (!services.newsEnabled) return json({error: 'News is disabled'}, 503);
 
       if (pathname === '/edition') {

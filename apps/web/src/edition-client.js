@@ -10,7 +10,7 @@ const LATEST_TTL_MS = 30_000;
 const MAX_CACHED_EDITIONS = 3;
 
 /** Reads Editions from the news service, with a small per-instance cache so busy pages do not fan out. */
-export function createEditionClient({baseUrl, fetchImpl = fetch, now = Date.now} = {}) {
+export function createEditionClient({baseUrl, token, fetchImpl = fetch, now = Date.now} = {}) {
   const base = baseUrl?.replace(/\/$/, '');
   const byId = new Map();
   let latest;
@@ -19,7 +19,7 @@ export function createEditionClient({baseUrl, fetchImpl = fetch, now = Date.now}
     if (!base) throw new EditionUnavailable('NEWS_SERVICE_URL is not configured');
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-    try { return await fetchImpl(`${base}${path}`, {signal: controller.signal, headers: {'Accept': 'application/json, image/*'}}); }
+    try { return await fetchImpl(`${base}${path}`, {signal: controller.signal, headers: {'Accept': 'application/json, image/*', ...(token ? {'Authorization': `Bearer ${token}`} : {})}}); }
     catch (error) { throw new EditionUnavailable(`News service unreachable: ${error.message}`); }
     finally { clearTimeout(timeout); }
   };

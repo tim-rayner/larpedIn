@@ -9,7 +9,7 @@ export const quietLog = {warn() {}, error() {}, log() {}};
 export interface Harness { services: Services; calls: {openai: number; articles: number; photos: number; rss: number}; images: ReturnType<typeof createMemoryImageStore>; clock: {now: number} }
 
 /** Services wired to fakes: RSS from `feed()`, every article exposing a photo, OpenAI optional. */
-export function harness({feed = () => rss(3), openai = true, secret = 'test-secret'}: {feed?: () => string; openai?: boolean; secret?: string | null} = {}): Harness {
+export function harness({feed = () => rss(3), openai = true, secret = 'test-secret', readToken = null}: {feed?: () => string; openai?: boolean; secret?: string | null; readToken?: string | null} = {}): Harness {
   const calls = {openai: 0, articles: 0, photos: 0, rss: 0};
   const images = createMemoryImageStore();
   const clock = {now: Date.parse('2026-10-02T00:00:00Z')};
@@ -29,7 +29,7 @@ export function harness({feed = () => rss(3), openai = true, secret = 'test-secr
   const services: Services = {
     kv: createMemoryKeyValueStore(() => clock.now), images, fetchImpl, now: () => clock.now, random: () => 0, log: quietLog,
     feedUrl: 'https://techcrunch.com/feed/', maxItems: 36, ...(openai ? {openaiApiKey: 'test-key'} : {}), openaiModel: 'test-model',
-    ...(secret ? {refreshSecret: secret} : {}), newsEnabled: true,
+    ...(secret ? {refreshSecret: secret} : {}), ...(readToken ? {readToken} : {}), newsEnabled: true,
   };
   return {services, calls, images, clock};
 }

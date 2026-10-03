@@ -53,3 +53,17 @@ test('stored photos are served as immutable images', async () => {
   expect(response.headers.get('cache-control')).toContain('immutable');
   expect(new Uint8Array(await response.arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
 });
+
+test('read routes require the service token when one is configured', async () => {
+  const h = harness({readToken: 'read-token'});
+  const handle = createHandler(h.services);
+  await call(handle, '/refresh', authed);
+  const withToken = {headers: {Authorization: 'Bearer read-token'}};
+  for (const path of ['/edition', '/edition/0123456789abcdef', '/image/0123456789abcdef0123']) {
+    expect((await call(handle, path)).status).toBe(401);
+    expect((await call(handle, path, {headers: {Authorization: 'Bearer wrong'}})).status).toBe(401);
+  }
+  expect((await call(handle, '/edition', withToken)).status).toBe(200);
+  expect((await call(handle, '/edition/0123456789abcdef', withToken)).status).toBe(404);
+  expect((await call(handle, '/health')).status).toBe(200);
+});

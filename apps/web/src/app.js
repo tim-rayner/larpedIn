@@ -26,18 +26,37 @@ function send(request,status,body,type='text/html; charset=utf-8',cache='no-cach
  return new Response(request.method==='HEAD'?null:data,{status,headers:{...security,'Content-Type':type,'Content-Length':String(data.length),'Cache-Control':cache,'Vary':'Accept-Encoding',...(compress?{'Content-Encoding':'gzip'}:{}),...extra}});
 }
 
-export function createHandler({editions = createEditionClient({baseUrl: process.env.NEWS_SERVICE_URL})} = {}){
+/** Per-instance fixed-window limiter for the post preview; keyed on the first forwarded address. */
+const PREVIEW_LIMIT = 30, PREVIEW_WINDOW_MS = 60_000, PREVIEW_MAX_TRACKED = 5_000;
+function createLimiter(limit, windowMs, now = Date.now){
+ const hits = new Map();
+ return request => {
+  const key = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
+  const t = now(); let entry = hits.get(key);
+  if(!entry || t - entry.start >= windowMs){
+   if(hits.size >= PREVIEW_MAX_TRACKED) for(const [k,v] of hits) if(t - v.start >= windowMs) hits.delete(k);
+   if(hits.size >= PREVIEW_MAX_TRACKED) hits.clear();
+   entry = {start:t,count:0}; hits.set(key,entry);
+  }
+  return ++entry.count <= limit;
+ };
+}
+
+export function createHandler({editions = createEditionClient({baseUrl: process.env.NEWS_SERVICE_URL, token: process.env.NEWS_SERVICE_TOKEN})} = {}){
  /** Latest Edition rendered as the first page, or undefined so the house edition is shown. */
  async function homeFeed(){
   try { return pageOf(await editions.getLatest(),0,{sourceVisible:showNewsSource()}); }
   catch(error){ console.warn(`Showing the house edition: ${error.message}`); return undefined; }
  }
+ const previewLimit = createLimiter(PREVIEW_LIMIT, PREVIEW_WINDOW_MS);
  return async function handle(request){
   try {
    const url = new URL(request.url);
    if (request.method === 'POST' && url.pathname === '/api/posts/preview') {
     const origin = request.headers.get('origin');
-    if(origin && new URL(origin).host !== (request.headers.get('host') || url.host)) return send(request,403,'Forbidden','text/plain');
+    let originHost; try{originHost=origin&&new URL(origin).host;}catch{}
+    if(!originHost || originHost !== (request.headers.get('host') || url.host)) return send(request,403,'Forbidden','text/plain');
+    if(!previewLimit(request))return send(request,429,'Too many requests','text/plain','no-store',{'Retry-After':'60'});
     const body = await request.text();
     if(Buffer.byteLength(body)>16000)return send(request,413,'Post too large','text/plain');
     let parsed; try{parsed=JSON.parse(body);}catch{return send(request,400,'Invalid JSON','text/plain');}

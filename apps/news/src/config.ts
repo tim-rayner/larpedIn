@@ -14,6 +14,8 @@ export interface Services {
   openaiApiKey?: string;
   openaiModel: string;
   refreshSecret?: string;
+  /** Bearer token the web app must present to read Editions and images. Unset = reads are open (dev only). */
+  readToken?: string;
   newsEnabled: boolean;
 }
 
@@ -30,6 +32,7 @@ export function servicesFromEnv(env: Record<string, string | undefined> = proces
   const images = accountId && accessKeyId && secretAccessKey && bucket ? createR2ImageStore({accountId, accessKeyId, secretAccessKey, bucket}) : createMemoryImageStore();
   if (!(upstashUrl && upstashToken)) log.warn('UPSTASH_REDIS_REST_URL/TOKEN not set: using in-memory edition store (dev only).');
   if (!(accountId && accessKeyId && secretAccessKey && bucket)) log.warn(`${missingR2.join(', ')} not set: using in-memory image store (dev only).`);
+  if (!env.NEWS_SERVICE_TOKEN) log.warn('NEWS_SERVICE_TOKEN not set: Edition and image routes are open to anyone (dev only).');
   return {
     kv, images, fetchImpl: fetch, now: Date.now, random: Math.random, log,
     feedUrl: env.TECH_NEWS_RSS_URL || TECHCRUNCH_FEED_URL,
@@ -37,6 +40,7 @@ export function servicesFromEnv(env: Record<string, string | undefined> = proces
     ...(env.OPENAI_API_KEY ? {openaiApiKey: env.OPENAI_API_KEY} : {}),
     openaiModel: env.OPENAI_MODEL || DEFAULT_MODEL,
     ...(env.REFRESH_SECRET ? {refreshSecret: env.REFRESH_SECRET} : {}),
+    ...(env.NEWS_SERVICE_TOKEN ? {readToken: env.NEWS_SERVICE_TOKEN} : {}),
     newsEnabled: env.TECH_NEWS_ENABLED !== 'false',
   };
 }
