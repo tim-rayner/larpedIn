@@ -95,9 +95,9 @@ function updateLatestNews(headlines){
  if(!Array.isArray(headlines)||!headlines.length)return;
  const list=$('#latest-news');
  const items=headlines.slice(0,5).map(headline=>{
-  const item=document.createElement('li'),link=document.createElement(headline.url?'a':'div'),title=document.createElement('strong'),meta=document.createElement('small'),source=document.createElement('span');
-  if(headline.url){link.href=headline.url;link.target='_blank';link.rel='noopener noreferrer';}title.textContent=headline.title;meta.textContent=headline.time||'Recently';
-  if(headline.url){source.textContent=` · ${headline.author||sourceName}`;meta.append(source);}link.append(title,meta);item.append(link);return item;
+  const item=document.createElement('li'),link=document.createElement(headline.postId?'button':headline.url?'a':'div'),title=document.createElement('strong'),meta=document.createElement('small'),source=document.createElement('span');
+  if(headline.postId){link.dataset.action='news-post';link.dataset.postId=headline.postId;}else if(headline.url){link.href=headline.url;link.target='_blank';link.rel='noopener noreferrer';}title.textContent=headline.title;meta.textContent=headline.time||'Recently';
+  if(headline.postId?headline.author:headline.url){source.textContent=` · ${headline.author||sourceName}`;meta.append(source);}link.append(title,meta);item.append(link);return item;
  });
  list.replaceChildren(...items);$('.news-subtitle').textContent=sourceName?`Latest from ${sourceName} · Refreshed hourly`:'Latest technology news · Refreshed hourly';
 }
@@ -186,6 +186,7 @@ const actions={
  job(){modal('Your application is already inspirational',`<p>This job is fictional. So is the requirement for 12 years of experience in generative AI.</p><p>No CV, personal information or actual application has been sent.</p><button class="button primary" data-action="close-dialog">Back to networking</button>`);},
  notifications(){const defaults=[['elong-husk','endorsed you for “Confidently explaining things”.'],['mark-zuckerbot','viewed your profile. The algorithm made him do it.'],['satire-nadella','invited you to scale your personal brand.']].map(([id,text])=>({...publicCharacter(id),text}));const items=notifications.length?notifications:defaults;modal('Notifications',`<p class="muted">Your fictional network is paying attention.</p>${items.map(n=>`<div class="notification-row">${av(n.avatar)}<div><p><strong>${escape(n.name)}</strong> ${escape(n.text)}</p><small>Simulated activity</small></div></div>`).join('')}`);$('.notification-dot').textContent='0';},
  messages(){const friend=messageFriend();modal('Messaging',`<div class="compose-identity">${av(friend.avatar)}<div><strong>${escape(friend.name)}</strong><small>Fictional conversation</small></div></div><div class="chat-thread"><p><strong>${escape(firstName(friend.name))}:</strong> ${escape((friend.message??fallbackMessage).replaceAll('{user}',firstName(me.name)))}</p></div><form id="message-form" class="comment-form"><label class="sr-only" for="message-input">Your message</label><input id="message-input" name="message" maxlength="500" placeholder="Write a message…" required><button class="button primary">Send</button></form><p class="muted">This conversation is simulated. Nothing is sent to anyone.</p>`);},
+ 'news-post'(button){const post=document.getElementById(button.dataset.postId);if(!post)return;post.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});post.focus({preventScroll:true});},
  async news(button){const {news}=await context();const n=news[Number(button.dataset.news)||0];modal(n[0],`<p>${escape(n[3])}</p><p class="muted">LarpedIn News. Entirely fictional, alarmingly plausible.</p>`);},
  buzzle(){game=buzzleState();modal('Daily Buzzle','');renderBuzzle();},
  'buzzle-key'(button){buzzleInput(button.dataset.key);},

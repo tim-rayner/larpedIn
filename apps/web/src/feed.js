@@ -26,6 +26,7 @@ export function pageOf(edition, offset, {sourceVisible, pageSize = PAGE_SIZE}) {
   }));
   const headlines = edition.headlines.map(({title, url, author, publishedAt}) => ({
     title, time: relativeTime(publishedAt, edition.refreshedAt),
+    ...(edition.posts.find(post => post.sourceUrl === url) ? {postId: edition.posts.find(post => post.sourceUrl === url).id} : {}),
     ...(sourceVisible ? {url, author} : {}),
   }));
   const next = offset + slice.length;
