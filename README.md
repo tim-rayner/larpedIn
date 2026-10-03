@@ -1,5 +1,12 @@
 # LarpedIn
 
+> 🤖 The source code in this repository was not hand written. It was generated with AI coding assistants: Claude Sonnet 5.5 (Anthropic) and GPT 6 Astra (OpenAI).
+>
+> 🧠 That said, every architectural decision was deliberate and planned by the author.
+>
+> 🧪 This is a new workflow I'm trialing in my free time, to understand how I can achieve best outputs with AI.
+
+
 Genuine news. Satirical takes.
 
 An independent LinkedIn-inspired parody with a fictional tech CEO network. Server-rendered HTML, vanilla JavaScript, native CSS, locally hosted assets, and no runtime package dependencies in the client.
